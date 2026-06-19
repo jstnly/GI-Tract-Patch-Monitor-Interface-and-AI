@@ -1,0 +1,32 @@
+.heading {
+  font-size: var(--fs-h2);
+  font-weight: var(--fw-semibold);
+  margin-bottom: var(--space-3);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.chip {
+  padding: 4px 11px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--color-border-strong);
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  font-size: var(--fs-label);
+  font-weight: var(--fw-medium);
+  transition: all 0.12s ease;
+}
+.chip:hover {
+  background: var(--color-surface-alt);
+}
+
+.active {
+  background: var(--color-accent-soft);
+  border-color: var(--color-accent);
+  color: var(--color-accent-hover);
+}

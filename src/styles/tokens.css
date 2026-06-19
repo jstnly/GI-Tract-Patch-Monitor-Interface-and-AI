@@ -1,0 +1,63 @@
+:root {
+  /* ---- Surface / neutrals (white-dominant) ---- */
+  --color-bg: #f7f9fc; /* app background, faint cool white */
+  --color-surface: #ffffff; /* cards, modals */
+  --color-surface-alt: #f1f5fb; /* hover / subtle fills */
+  --color-border: #e3e9f2; /* hairline card borders */
+  --color-border-strong: #cdd7e6;
+  --color-text: #16202e; /* near-black, not pure black */
+  --color-text-muted: #5b6b80; /* labels, secondary */
+  --color-text-faint: #8a99ad;
+
+  /* ---- Blue accent (primary) ---- */
+  --color-accent: #2d7ff9; /* primary blue */
+  --color-accent-hover: #1e66d0;
+  --color-accent-soft: #e8f1fe; /* tinted backgrounds, selected state */
+  --color-accent-ring: rgba(45, 127, 249, 0.3); /* focus ring */
+
+  /* ---- Status bands (color is NEVER the only signal) ---- */
+  --color-normal: #1fa971; /* green  — label "Normal" */
+  --color-normal-soft: #e5f6ee;
+  --color-watch: #c77d12; /* amber  — label "Watch" (darkened for AA text) */
+  --color-watch-bright: #e8a33d; /* amber for rings / fills */
+  --color-watch-soft: #fcf3e3;
+  --color-alert: #e5484d; /* red — RESERVED for Alert only */
+  --color-alert-soft: #fcebec;
+
+  /* ---- Spacing scale (4px base) ---- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-8: 48px;
+
+  /* ---- Radius ---- */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-pill: 999px;
+
+  /* ---- Shadow (soft, Claude-like) ---- */
+  --shadow-card: 0 1px 2px rgba(16, 32, 54, 0.04), 0 4px 16px rgba(16, 32, 54, 0.06);
+  --shadow-pop: 0 8px 30px rgba(16, 32, 54, 0.12);
+  --shadow-alert: 0 0 0 2px var(--color-alert), 0 6px 20px rgba(229, 72, 77, 0.18);
+  --shadow-watch: 0 0 0 2px var(--color-watch-bright), 0 4px 16px rgba(232, 163, 61, 0.14);
+
+  /* ---- Typography ---- */
+  --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica,
+    Arial, sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', 'Cascadia Code', Menlo, Consolas, monospace;
+  --fs-display: 32px;
+  --fs-h1: 22px;
+  --fs-h2: 18px;
+  --fs-body: 15px;
+  --fs-label: 13px;
+  --fs-tiny: 11px;
+  --fw-regular: 400;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+  --lh-tight: 1.2;
+  --lh-body: 1.5;
+}

@@ -1,0 +1,39 @@
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  border-radius: var(--radius-pill);
+  font-weight: var(--fw-semibold);
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.md {
+  padding: 6px 12px;
+  font-size: var(--fs-label);
+}
+
+.sm {
+  padding: 4px 9px;
+  font-size: var(--fs-tiny);
+}
+
+.feed {
+  background: var(--color-accent-soft);
+  color: var(--color-accent-hover);
+}
+
+.soon {
+  background: var(--color-surface-alt);
+  color: var(--color-text-muted);
+}
+
+.hold {
+  background: var(--color-watch-soft);
+  color: var(--color-watch);
+}
+
+.consult {
+  background: var(--color-alert-soft);
+  color: var(--color-alert);
+}

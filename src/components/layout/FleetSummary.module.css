@@ -1,0 +1,41 @@
+.summary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: var(--fs-label);
+  font-weight: var(--fw-medium);
+}
+
+.total {
+  color: var(--color-text-muted);
+}
+
+.divider {
+  width: 1px;
+  height: 18px;
+  background: var(--color-border);
+}
+
+.stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-variant-numeric: tabular-nums;
+}
+
+.alert {
+  color: var(--color-alert);
+}
+.watch {
+  color: var(--color-watch);
+}
+.normal {
+  color: var(--color-normal);
+}
+
+@media (max-width: 760px) {
+  .total,
+  .divider {
+    display: none;
+  }
+}

@@ -1,0 +1,69 @@
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.titleName {
+  font-size: var(--fs-h1);
+  font-weight: var(--fw-semibold);
+  letter-spacing: -0.01em;
+}
+
+.editBtn {
+  display: inline-flex;
+  padding: 4px;
+  border: none;
+  background: transparent;
+  color: var(--color-text-faint);
+  border-radius: var(--radius-sm);
+}
+.editBtn:hover {
+  background: var(--color-surface-alt);
+  color: var(--color-accent);
+}
+
+.titleSub {
+  font-size: var(--fs-label);
+  color: var(--color-text-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.summary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+}
+
+.facts {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  flex: 1;
+  min-width: 0;
+}
+
+.factList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.factList li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  font-size: var(--fs-label);
+}
+
+.factList li span:first-child {
+  color: var(--color-text-muted);
+}
+
+.factList li span:last-child {
+  font-weight: var(--fw-medium);
+}

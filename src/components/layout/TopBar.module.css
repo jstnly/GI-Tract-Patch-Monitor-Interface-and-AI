@@ -1,0 +1,117 @@
+.bar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.row {
+  max-width: 1760px;
+  margin: 0 auto;
+  padding: var(--space-3) var(--space-5);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.glyph {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-md);
+  background: var(--color-accent);
+  color: #fff;
+  flex: none;
+}
+
+.title {
+  font-size: var(--fs-h1);
+  font-weight: var(--fw-semibold);
+  letter-spacing: -0.01em;
+}
+
+.clock {
+  display: block;
+  font-size: var(--fs-tiny);
+  color: var(--color-text-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.density {
+  display: inline-flex;
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  padding: 2px;
+}
+
+.density button {
+  border: none;
+  background: transparent;
+  border-radius: var(--radius-pill);
+  padding: 5px 12px;
+  font-size: var(--fs-label);
+  font-weight: var(--fw-medium);
+  color: var(--color-text-muted);
+  transition: all 0.12s ease;
+}
+
+.density button:hover {
+  color: var(--color-text);
+}
+
+.densityActive {
+  background: var(--color-surface) !important;
+  color: var(--color-accent-hover) !important;
+  box-shadow: var(--shadow-card);
+}
+
+.demoBar {
+  max-width: 1760px;
+  margin: 0 auto;
+  padding: var(--space-2) var(--space-5) var(--space-3);
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  border-top: 1px dashed var(--color-border);
+}
+
+.demoLabel {
+  font-size: var(--fs-tiny);
+  font-weight: var(--fw-semibold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-faint);
+  margin-right: var(--space-2);
+}
+
+@media (max-width: 900px) {
+  .density {
+    display: none;
+  }
+}
+
+@media (max-width: 760px) {
+  .clock {
+    display: none;
+  }
+  .row {
+    padding: var(--space-3);
+  }
+}

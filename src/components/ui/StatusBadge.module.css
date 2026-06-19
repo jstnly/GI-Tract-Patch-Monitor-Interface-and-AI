@@ -1,0 +1,35 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  border-radius: var(--radius-pill);
+  font-weight: var(--fw-semibold);
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  line-height: 1;
+}
+
+.md {
+  padding: 5px 10px 5px 8px;
+  font-size: var(--fs-label);
+}
+
+.sm {
+  padding: 3px 8px 3px 6px;
+  font-size: var(--fs-tiny);
+}
+
+.normal {
+  background: var(--color-normal-soft);
+  color: var(--color-normal);
+}
+
+.watch {
+  background: var(--color-watch-soft);
+  color: var(--color-watch);
+}
+
+.alert {
+  background: var(--color-alert-soft);
+  color: var(--color-alert);
+}
