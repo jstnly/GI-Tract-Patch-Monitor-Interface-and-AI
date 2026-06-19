@@ -1,0 +1,63 @@
+.wrap {
+  border: 1px dashed var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  padding: var(--space-3);
+  border: none;
+  background: transparent;
+  color: var(--color-text-muted);
+  font-size: var(--fs-label);
+  font-weight: var(--fw-medium);
+}
+
+.chev {
+  margin-left: auto;
+  transition: transform 0.15s ease;
+}
+.chevOpen {
+  margin-left: auto;
+  transform: rotate(180deg);
+  transition: transform 0.15s ease;
+}
+
+.panel {
+  padding: 0 var(--space-3) var(--space-3);
+}
+
+.hint {
+  font-size: var(--fs-tiny);
+  color: var(--color-text-faint);
+  margin-bottom: var(--space-2);
+}
+
+.segment {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-1);
+  background: var(--color-surface-alt);
+  padding: 4px;
+  border-radius: var(--radius-md);
+}
+
+.seg {
+  padding: 6px 4px;
+  border: none;
+  background: transparent;
+  border-radius: var(--radius-sm);
+  font-size: var(--fs-label);
+  font-weight: var(--fw-medium);
+  color: var(--color-text-muted);
+  transition: all 0.12s ease;
+}
+.seg:hover {
+  background: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: var(--shadow-card);
+}

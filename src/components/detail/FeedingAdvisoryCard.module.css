@@ -1,0 +1,97 @@
+.card {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  border: 1px solid;
+}
+
+.iconWrap {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  flex: none;
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.eyebrow {
+  font-size: var(--fs-tiny);
+  font-weight: var(--fw-semibold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-faint);
+}
+
+.verb {
+  font-size: var(--fs-h1);
+  font-weight: var(--fw-semibold);
+  letter-spacing: -0.01em;
+}
+
+.rationale {
+  color: var(--color-text-muted);
+  font-size: var(--fs-body);
+}
+
+.meta {
+  margin-top: var(--space-1);
+  font-size: var(--fs-label);
+  font-weight: var(--fw-medium);
+  color: var(--color-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.feed {
+  background: var(--color-accent-soft);
+  border-color: #c9e0fd;
+}
+.feed .iconWrap {
+  background: var(--color-accent);
+  color: #fff;
+}
+.feed .verb {
+  color: var(--color-accent-hover);
+}
+
+.soon {
+  background: var(--color-surface-alt);
+  border-color: var(--color-border);
+}
+.soon .iconWrap {
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  border: 1px solid var(--color-border);
+}
+
+.hold {
+  background: var(--color-watch-soft);
+  border-color: #f0dcb5;
+}
+.hold .iconWrap {
+  background: var(--color-watch-bright);
+  color: #fff;
+}
+.hold .verb {
+  color: var(--color-watch);
+}
+
+.consult {
+  background: var(--color-alert-soft);
+  border-color: #f4c9cb;
+}
+.consult .iconWrap {
+  background: var(--color-alert);
+  color: #fff;
+}
+.consult .verb {
+  color: var(--color-alert);
+}

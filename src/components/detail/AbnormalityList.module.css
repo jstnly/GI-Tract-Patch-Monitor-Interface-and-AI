@@ -1,0 +1,115 @@
+.heading {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--fs-h2);
+  font-weight: var(--fw-semibold);
+  margin-bottom: var(--space-3);
+}
+
+.count {
+  display: inline-grid;
+  place-items: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: var(--radius-pill);
+  background: var(--color-alert-soft);
+  color: var(--color-alert);
+  font-size: var(--fs-label);
+  font-weight: var(--fw-semibold);
+}
+
+.empty {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-normal-soft);
+  color: var(--color-normal);
+  border-radius: var(--radius-md);
+  font-size: var(--fs-label);
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.item {
+  display: flex;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  background: var(--color-surface-alt);
+  border-radius: var(--radius-md);
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-top: 5px;
+  flex: none;
+}
+
+.text {
+  min-width: 0;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.label {
+  font-weight: var(--fw-semibold);
+}
+
+.sev {
+  font-size: var(--fs-tiny);
+  font-weight: var(--fw-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 1px 6px;
+  border-radius: var(--radius-pill);
+}
+
+.explanation {
+  color: var(--color-text-muted);
+  font-size: var(--fs-label);
+  margin: 2px 0 4px;
+}
+
+.detected {
+  font-size: var(--fs-tiny);
+  color: var(--color-text-faint);
+}
+
+.high {
+  background-color: var(--color-alert);
+  color: var(--color-alert);
+}
+.medium {
+  background-color: var(--color-watch-bright);
+  color: var(--color-watch);
+}
+.low {
+  background-color: var(--color-text-faint);
+  color: var(--color-text-muted);
+}
+
+/* dots use background-color; severity pills override text/bg below */
+.sev.high {
+  background-color: var(--color-alert-soft);
+}
+.sev.medium {
+  background-color: var(--color-watch-soft);
+}
+.sev.low {
+  background-color: var(--color-surface);
+}

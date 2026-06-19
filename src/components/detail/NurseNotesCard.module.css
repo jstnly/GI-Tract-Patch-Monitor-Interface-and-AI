@@ -1,0 +1,176 @@
+.heading {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--fs-h2);
+  font-weight: var(--fw-semibold);
+  margin-bottom: var(--space-3);
+}
+
+.count {
+  display: inline-grid;
+  place-items: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: var(--radius-pill);
+  background: var(--color-accent-soft);
+  color: var(--color-accent-hover);
+  font-size: var(--fs-label);
+  font-weight: var(--fw-semibold);
+}
+
+.composer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.addendumBanner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--color-accent-soft);
+  color: var(--color-accent-hover);
+  font-size: var(--fs-label);
+}
+
+.bannerClose {
+  display: inline-flex;
+  padding: 2px;
+  border: none;
+  background: transparent;
+  color: inherit;
+  border-radius: var(--radius-sm);
+}
+.bannerClose:hover {
+  background: rgba(45, 127, 249, 0.16);
+}
+
+.textarea {
+  width: 100%;
+  min-height: 64px;
+  resize: vertical;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border-strong);
+  background: var(--color-surface);
+  font-family: inherit;
+  font-size: var(--fs-body);
+  color: var(--color-text);
+  line-height: var(--lh-body);
+}
+
+.signRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.input {
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border-strong);
+  background: var(--color-surface);
+  font-size: var(--fs-body);
+  color: var(--color-text);
+  flex: 1 1 120px;
+  min-width: 0;
+}
+
+.idInput {
+  flex: 1 1 80px;
+}
+
+.textarea:focus,
+.input:focus {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px var(--color-accent-ring);
+}
+
+.error {
+  font-size: var(--fs-tiny);
+  color: var(--color-alert);
+}
+
+.log {
+  list-style: none;
+  margin: var(--space-3) 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.empty {
+  font-size: var(--fs-label);
+  color: var(--color-text-faint);
+  padding: var(--space-1) 0;
+}
+
+.note {
+  padding: var(--space-3);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+/* Addendum entries are tied visually to the note they amend. */
+.addendum {
+  border-left: 3px solid var(--color-accent);
+  background: var(--color-accent-soft);
+  margin-left: var(--space-4);
+}
+
+.addLabel {
+  font-size: var(--fs-tiny);
+  font-weight: var(--fw-semibold);
+  color: var(--color-accent-hover);
+  margin-bottom: var(--space-1);
+}
+
+.noteText {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  color: var(--color-text);
+}
+
+.meta {
+  margin-top: var(--space-2);
+  font-size: var(--fs-tiny);
+  color: var(--color-text-faint);
+}
+
+.noteActions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: var(--space-2);
+}
+
+.addBtn {
+  border: none;
+  background: transparent;
+  padding: 0;
+  font-size: var(--fs-label);
+  font-weight: var(--fw-medium);
+  color: var(--color-accent);
+}
+.addBtn:hover {
+  color: var(--color-accent-hover);
+  text-decoration: underline;
+}
+
+.addendaHint {
+  font-size: var(--fs-tiny);
+  color: var(--color-text-faint);
+}
