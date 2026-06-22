@@ -10,8 +10,7 @@ normal-baby reference ranges, and surfaces:
   threshold, so a nurse knows to check on that baby,
 - a **feeding recommendation** (when to feed, hold, or consult) driven by gut
   motility and bowel movements,
-- a one-click **detail view** with the full spectrum of symptoms, trends and
-  flagged abnormalities,
+- a one-click **detail view** with the full spectrum of metrics and trends,
 - **add / remove** monitors at any time.
 
 > ⚠️ **Prototype with simulated data.** The patch hardware does not exist yet, so
@@ -62,11 +61,12 @@ its own after a minute or so.
 
 ## Using the demo
 
-- **Click any monitor box** to open its detail drawer: risk → feeding advice →
-  flagged abnormalities → all metrics → trends.
+- **Click any monitor box** to open its pop-out detail window: risk → feeding
+  advice → all metrics → trends → nurse notes. The windows are draggable and
+  resizable, and several can be open at once to compare babies (e.g. twins).
 - **Add monitor** (top-right) pairs a new monitor; pick a starting state
   (Normal / Watch / Alert / Random) to seed the demo.
-- **Remove** a monitor from inside its detail drawer (with an inline confirm).
+- **Remove** a monitor from inside its detail window (with an inline confirm).
 - **Demo** toggle (top bar) reveals global controls: add a random monitor, push a
   calm monitor into a slow drift toward Alert, or pause/resume the simulation.
 - Inside a monitor's detail drawer, the collapsible **Demo controls** can force

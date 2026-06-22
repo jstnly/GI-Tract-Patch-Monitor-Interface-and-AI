@@ -1,5 +1,5 @@
 import { createContext } from 'react'
-import type { MonitorId, NewMonitorSeed, NewNote, StatusBand } from '../types/monitor'
+import type { ContextEdits, MonitorId, NewMonitorSeed, NewNote, StatusBand } from '../types/monitor'
 import type { DemoApi } from '../lib/datasource'
 import { initialState, type Density, type MonitorState } from './reducer'
 
@@ -17,6 +17,7 @@ export interface MonitorActions {
   addMonitor(seed: NewMonitorSeed): void
   removeMonitor(id: MonitorId): void
   renameMonitor(id: MonitorId, label: string, bed: string, babyId: string): void
+  updateContext(id: MonitorId, edits: ContextEdits): void
   addNote(id: MonitorId, note: NewNote): void
   setDensity(density: Density): void
   /** Present only when the data source supports forcing a state (demo). */
@@ -38,6 +39,7 @@ export const ActionsContext = createContext<MonitorActions>({
   addMonitor: noop,
   removeMonitor: noop,
   renameMonitor: noop,
+  updateContext: noop,
   addNote: noop,
   setDensity: noop,
 })

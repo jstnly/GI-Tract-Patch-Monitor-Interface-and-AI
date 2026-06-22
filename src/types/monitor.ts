@@ -105,6 +105,14 @@ export interface MonitorContext {
   admittedAt: number
 }
 
+/** Editable clinical context fields (ages, weight, last feed). */
+export interface ContextEdits {
+  gestationalAgeWeeks: number
+  correctedAgeDays: number
+  weightGrams: number
+  lastFeedTime: number
+}
+
 export interface Monitor {
   id: MonitorId
   /** De-identified display name, e.g. "Baby A". */

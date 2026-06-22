@@ -57,6 +57,7 @@ export function MonitorProvider({ children, dataSource }: Props) {
         dispatch({ type: 'CLOSE', id })
       },
       renameMonitor: (id, label, bed, babyId) => source.renameMonitor(id, label, bed, babyId),
+      updateContext: (id, edits) => source.updateContext(id, edits),
       addNote: (id, note) => source.addNote(id, note),
       setDensity: (density) => {
         try {

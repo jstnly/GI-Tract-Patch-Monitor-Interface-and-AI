@@ -13,6 +13,7 @@ import type {
   Metric,
   MetricKey,
   MetricSample,
+  ContextEdits,
   Monitor,
   MonitorId,
   NewMonitorSeed,
@@ -264,6 +265,21 @@ export class Simulation {
     sm.label = label
     sm.bed = bed
     sm.context.babyId = babyId
+  }
+
+  updateContext(id: MonitorId, edits: ContextEdits, now: number): void {
+    const sm = this.monitors.find((m) => m.id === id)
+    if (!sm) return
+    sm.context.gestationalAgeWeeks = edits.gestationalAgeWeeks
+    sm.context.correctedAgeDays = edits.correctedAgeDays
+    sm.context.weightGrams = edits.weightGrams
+    sm.context.lastFeedTime = edits.lastFeedTime
+    // Keep the feeding clock in step with the edited "last fed" time.
+    sm.minutesSinceFeed = clamp(
+      (now - edits.lastFeedTime) / 60_000,
+      0,
+      sm.context.feedIntervalTargetMin * 3,
+    )
   }
 
   addNote(id: MonitorId, note: NewNote, now: number): void {

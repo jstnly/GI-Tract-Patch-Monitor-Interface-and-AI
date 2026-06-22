@@ -1,4 +1,5 @@
 import type {
+  ContextEdits,
   Monitor,
   MonitorId,
   NewMonitorSeed,
@@ -93,6 +94,11 @@ export class SimulatedDataSource implements DataSource {
 
   renameMonitor(id: MonitorId, label: string, bed: string, babyId: string): void {
     this.sim.renameMonitor(id, label, bed, babyId)
+    this.refresh()
+  }
+
+  updateContext(id: MonitorId, edits: ContextEdits): void {
+    this.sim.updateContext(id, edits, Date.now())
     this.refresh()
   }
 

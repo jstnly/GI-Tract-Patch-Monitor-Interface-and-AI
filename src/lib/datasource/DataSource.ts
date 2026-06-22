@@ -1,4 +1,11 @@
-import type { Monitor, MonitorId, NewMonitorSeed, NewNote, StatusBand } from '../../types/monitor'
+import type {
+  ContextEdits,
+  Monitor,
+  MonitorId,
+  NewMonitorSeed,
+  NewNote,
+  StatusBand,
+} from '../../types/monitor'
 
 /**
  * Optional, demo-only global controls (simulated source only). A real patch
@@ -44,6 +51,9 @@ export interface DataSource {
 
   /** Rename a monitor's baby label, bed, and DICU id. */
   renameMonitor(id: MonitorId, label: string, bed: string, babyId: string): void
+
+  /** Update a monitor's clinical context (ages, weight, last feed). */
+  updateContext(id: MonitorId, edits: ContextEdits): void
 
   /** Append a signed clinical note (or addendum) to a baby's record. */
   addNote(id: MonitorId, note: NewNote): void
