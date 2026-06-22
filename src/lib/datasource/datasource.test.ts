@@ -35,6 +35,23 @@ describe('SimulatedDataSource', () => {
     expect(m.context.babyId).toBe('DICU-207')
   })
 
+  it('updates clinical context (ages, weight, last fed)', () => {
+    const ds = new SimulatedDataSource()
+    const id = ds.list()[0].id
+    const lastFed = Date.now() - 45 * 60_000
+    ds.updateContext(id, {
+      gestationalAgeWeeks: 33,
+      correctedAgeDays: 12,
+      weightGrams: 2100,
+      lastFeedTime: lastFed,
+    })
+    const m = ds.list().find((x) => x.id === id)!
+    expect(m.context.gestationalAgeWeeks).toBe(33)
+    expect(m.context.correctedAgeDays).toBe(12)
+    expect(m.context.weightGrams).toBe(2100)
+    expect(m.context.lastFeedTime).toBe(lastFed)
+  })
+
   it('appends signed notes and links addenda to their parent', () => {
     const ds = new SimulatedDataSource()
     const id = ds.list()[0].id

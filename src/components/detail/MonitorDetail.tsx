@@ -6,8 +6,8 @@ import { FloatingWindow } from '../ui/FloatingWindow'
 import { RiskMeter } from '../ui/RiskMeter'
 import { StatusBadge } from '../ui/StatusBadge'
 import { IconPencil } from '../ui/icons'
-import { AbnormalityList } from './AbnormalityList'
 import { DemoControls } from './DemoControls'
+import { EditContextForm } from './EditContextForm'
 import { FeedingAdvisoryCard } from './FeedingAdvisoryCard'
 import { MetricGrid } from './MetricGrid'
 import { NurseNotesCard } from './NurseNotesCard'
@@ -21,6 +21,7 @@ import styles from './MonitorDetail.module.css'
 function MonitorWindow({ monitor, index }: { monitor: Monitor; index: number }) {
   const actions = useMonitorActions()
   const [editing, setEditing] = useState(false)
+  const [editingContext, setEditingContext] = useState(false)
   const now = Date.now()
 
   return (
@@ -61,33 +62,53 @@ function MonitorWindow({ monitor, index }: { monitor: Monitor; index: number }) 
         )
       }
     >
-      <section className={styles.summary}>
-        <RiskMeter value={monitor.riskPct} band={monitor.status} size={112} stroke={10} showCaption />
-        <div className={styles.facts}>
-          <StatusBadge band={monitor.status} />
-          <ul className={styles.factList}>
-            <li>
-              <span>Gestational age</span>
-              <span className="tnum">{monitor.context.gestationalAgeWeeks} wk</span>
-            </li>
-            <li>
-              <span>Corrected age</span>
-              <span className="tnum">{monitor.context.correctedAgeDays} d</span>
-            </li>
-            <li>
-              <span>Weight</span>
-              <span className="tnum">{monitor.context.weightGrams} g</span>
-            </li>
-            <li>
-              <span>Last fed</span>
-              <span className="tnum">{formatAgo(monitor.context.lastFeedTime, now)}</span>
-            </li>
-          </ul>
-        </div>
-      </section>
+      {editingContext ? (
+        <EditContextForm
+          context={monitor.context}
+          onSave={(edits) => {
+            actions.updateContext(monitor.id, edits)
+            setEditingContext(false)
+          }}
+          onCancel={() => setEditingContext(false)}
+        />
+      ) : (
+        <section className={styles.summary}>
+          <RiskMeter value={monitor.riskPct} band={monitor.status} size={112} stroke={10} showCaption />
+          <div className={styles.facts}>
+            <div className={styles.factsHeader}>
+              <StatusBadge band={monitor.status} />
+              <button
+                className={styles.editBtn}
+                onClick={() => setEditingContext(true)}
+                aria-label="Edit ages, weight, and last fed"
+              >
+                <IconPencil size={14} />
+                <span>Edit</span>
+              </button>
+            </div>
+            <ul className={styles.factList}>
+              <li>
+                <span>Gestational age</span>
+                <span className="tnum">{monitor.context.gestationalAgeWeeks} wk</span>
+              </li>
+              <li>
+                <span>Corrected age</span>
+                <span className="tnum">{monitor.context.correctedAgeDays} d</span>
+              </li>
+              <li>
+                <span>Weight</span>
+                <span className="tnum">{monitor.context.weightGrams} g</span>
+              </li>
+              <li>
+                <span>Last fed</span>
+                <span className="tnum">{formatAgo(monitor.context.lastFeedTime, now)}</span>
+              </li>
+            </ul>
+          </div>
+        </section>
+      )}
 
       <FeedingAdvisoryCard feeding={monitor.feeding} />
-      <AbnormalityList abnormalities={monitor.abnormalities} />
       <MetricGrid metrics={monitor.metrics} />
       <TrendChartPanel monitor={monitor} />
       <NurseNotesCard monitorId={monitor.id} notes={monitor.notes} />
