@@ -1,39 +1,30 @@
 /**
- * Pure risk scoring: active abnormalities → a 0–100 risk score and a band.
+ * Baseline-relative risk scoring.
  *
- * Each abnormality contributes `weight * (1 + deviation)` points; points are
- * summed and squashed through a saturating curve so a single transient blip
- * stays in Watch, while an extreme finding (or two co-firing findings) crosses
- * into Alert.
+ * Instead of absolute population thresholds, risk is the weighted HARMFUL
+ * DEVIATION of each metric from THIS baby's own calibrated baseline:
+ *   - motility metrics (lower = worse): a drop below baseline, where a ~50%
+ *     drop counts as fully harmful (the clinical "30–50% drop" zone);
+ *   - coordination / time-since-MMC (higher = worse, baseline near zero): a rise
+ *     above baseline, scaled by a fixed span.
+ * Plus a small bump if the Motility-Index Gain is below its normal band.
+ * The summed harm is squashed to 0–100 and banded.
  */
 
-import type { StatusBand } from '../../types/monitor'
-import type { ActiveAbnormality } from './abnormalities'
-import { ALERT_MIN, clamp, GAIN_NORMAL, RISK_K, SEVERITY_WEIGHT, WATCH_MIN } from './config'
-
-export function rawScore(abnormalities: ActiveAbnormality[]): number {
-  let raw = 0
-  for (const a of abnormalities) {
-    raw += SEVERITY_WEIGHT[a.def.severity] * (1 + a.deviation)
-  }
-  return raw
-}
-
-/**
- * Extra risk points when the Motility Index Gain leaves its healthy band — a
- * poor post-fed motility ramp (low gain) nudges risk up. Capped so it modulates
- * rather than dominates the sensor-metric findings.
- */
-export function gainPenalty(gain: number): number {
-  const [lo, hi] = GAIN_NORMAL
-  if (gain >= lo && gain <= hi) return 0
-  if (gain < lo) return clamp((lo - gain) / lo, 0, 1) * 2.5
-  return clamp((gain - hi) / hi, 0, 1) * 2
-}
-
-export function riskFromRaw(raw: number): number {
-  return Math.round(100 * (1 - Math.exp(-raw / RISK_K)))
-}
+import type { MetricKey, StatusBand } from '../../types/monitor'
+import type { MetricValues } from './abnormalities'
+import {
+  ALERT_MIN,
+  clamp,
+  GAIN_NORMAL,
+  METRIC_DEFS,
+  RELATIVE_RISK_K,
+  RISK_FULL_DROP,
+  RISK_GAIN_WEIGHT,
+  RISK_RISE_SPAN,
+  RISK_WEIGHTS,
+  WATCH_MIN,
+} from './config'
 
 export function bandFromRisk(risk: number): StatusBand {
   if (risk >= ALERT_MIN) return 'Alert'
@@ -41,11 +32,38 @@ export function bandFromRisk(risk: number): StatusBand {
   return 'Normal'
 }
 
-export function scoreRisk(
-  abnormalities: ActiveAbnormality[],
-  gain?: number,
+/** Harmful deviation of one metric from its baseline, as a 0–1 fraction. */
+export function metricHarm(key: MetricKey, value: number, baseline: number): number {
+  if (!Number.isFinite(baseline) || baseline <= 0) return 0
+  if (METRIC_DEFS[key].higherIsWorse) {
+    const span = RISK_RISE_SPAN[key] ?? baseline
+    return clamp((value - baseline) / span, 0, 1)
+  }
+  // lower is worse: a relative drop below baseline
+  return clamp((baseline - value) / baseline / RISK_FULL_DROP, 0, 1)
+}
+
+/** Total weighted harm vs. baseline (+ a small low-Gain term). */
+export function relativeHarm(
+  values: MetricValues,
+  baseline: Record<MetricKey, number>,
+  gain: number,
+): number {
+  let harm = 0
+  for (const key of Object.keys(RISK_WEIGHTS) as MetricKey[]) {
+    harm += RISK_WEIGHTS[key] * metricHarm(key, values[key], baseline[key])
+  }
+  const [gainLo] = GAIN_NORMAL
+  if (gain < gainLo) harm += RISK_GAIN_WEIGHT * clamp((gainLo - gain) / gainLo, 0, 1)
+  return harm
+}
+
+export function relativeRisk(
+  values: MetricValues,
+  baseline: Record<MetricKey, number>,
+  gain: number,
 ): { riskPct: number; band: StatusBand } {
-  const raw = rawScore(abnormalities) + (gain === undefined ? 0 : gainPenalty(gain))
-  const riskPct = riskFromRaw(raw)
+  const harm = relativeHarm(values, baseline, gain)
+  const riskPct = Math.round(100 * (1 - Math.exp(-harm / RELATIVE_RISK_K)))
   return { riskPct, band: bandFromRisk(riskPct) }
 }

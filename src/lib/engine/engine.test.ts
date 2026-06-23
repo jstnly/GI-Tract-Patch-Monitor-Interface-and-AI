@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { detectAbnormalities, type MetricValues } from './abnormalities'
 import { computeDistensionRisk } from './derived'
 import { recommendFeeding } from './feeding'
-import { bandFromRisk, gainPenalty, scoreRisk } from './risk'
+import { bandFromRisk, metricHarm, relativeRisk } from './risk'
 import { computeMotility } from './motility'
 import { maturityFactor, MI_BASELINE_WORK } from './config'
 
@@ -14,37 +14,18 @@ const NORMAL: MetricValues = {
   timeSinceMMC: 1,
   coordination: 0.8,
 }
+/** Each baby's calibrated baseline ≈ its healthy reference. */
+const BASELINE: MetricValues = { ...NORMAL }
 
 const v = (overrides: Partial<MetricValues>): MetricValues => ({ ...NORMAL, ...overrides })
 const m = maturityFactor(40) // mature → 1.0
 
-describe('abnormality detection + risk bands', () => {
-  it('healthy values produce no abnormalities and 0% risk', () => {
-    const abn = detectAbnormalities(NORMAL, m)
-    expect(abn).toHaveLength(0)
-    const { riskPct, band } = scoreRisk(abn, 30) // healthy gain
-    expect(riskPct).toBe(0)
-    expect(band).toBe('Normal')
+describe('abnormality detection (feeds the feeding advisory)', () => {
+  it('healthy values produce no abnormalities', () => {
+    expect(detectAbnormalities(NORMAL, m)).toHaveLength(0)
   })
 
-  it('a single high finding stays in Watch, not Alert', () => {
-    const abn = detectAbnormalities(v({ contractionFrequency: 3 }), m)
-    expect(abn.map((a) => a.def.id)).toContain('CF_LOW')
-    const { band } = scoreRisk(abn)
-    expect(band).toBe('Watch')
-  })
-
-  it('several co-firing findings cross into Alert', () => {
-    const abn = detectAbnormalities(
-      v({ contractionFrequency: 3, mmcDuration: 1.2, coordination: 4.5, contractionAmplitude: 38 }),
-      m,
-    )
-    const ids = abn.map((a) => a.def.id)
-    expect(ids).toEqual(expect.arrayContaining(['CF_LOW', 'MMC_VSHORT', 'COORD_SEV', 'CA_LOW']))
-    expect(scoreRisk(abn).band).toBe('Alert')
-  })
-
-  it('keeps only the highest-severity abnormality per metric (coordination)', () => {
+  it('keeps only the highest-severity abnormality per metric', () => {
     const abn = detectAbnormalities(v({ coordination: 4.5 }), m)
     const coord = abn.filter((a) => a.def.metric === 'coordination')
     expect(coord).toHaveLength(1)
@@ -53,9 +34,60 @@ describe('abnormality detection + risk bands', () => {
 
   it('flags a delayed / absent MMC', () => {
     expect(detectAbnormalities(v({ timeSinceMMC: 4 }), m).map((a) => a.def.id)).toContain('MMC_LATE')
-    expect(detectAbnormalities(v({ timeSinceMMC: 7 }), m).map((a) => a.def.id)).toContain(
-      'MMC_VLATE',
+    expect(detectAbnormalities(v({ timeSinceMMC: 7 }), m).map((a) => a.def.id)).toContain('MMC_VLATE')
+  })
+})
+
+describe('baseline-relative risk', () => {
+  it('a baby sitting at its own baseline is Normal / ~0%', () => {
+    const { riskPct, band } = relativeRisk(NORMAL, BASELINE, 30)
+    expect(riskPct).toBeLessThan(10)
+    expect(band).toBe('Normal')
+  })
+
+  it('a mild deviation from baseline lands in Watch', () => {
+    const watch = v({
+      contractionFrequency: 8.3,
+      contractionAmplitude: 68,
+      mmcActivity: 0.6,
+      mmcDuration: 4.5,
+      coordination: 1.8,
+      timeSinceMMC: 1.6,
+    })
+    expect(relativeRisk(watch, BASELINE, 15).band).toBe('Watch')
+  })
+
+  it('a large drop from baseline crosses into Alert', () => {
+    const alert = v({
+      contractionFrequency: 4.5,
+      contractionAmplitude: 40,
+      mmcActivity: 0.15,
+      mmcDuration: 1.6,
+      coordination: 4.0,
+      timeSinceMMC: 5,
+    })
+    expect(relativeRisk(alert, BASELINE, 2).band).toBe('Alert')
+  })
+
+  it('is RELATIVE — the same values read as less risky against a sicker baseline', () => {
+    const sick = v({ contractionFrequency: 5 })
+    const vsHealthy = relativeRisk(sick, BASELINE, 30).riskPct // big drop from 10
+    const vsOwnBaseline = relativeRisk(sick, { ...BASELINE, contractionFrequency: 5 }, 30).riskPct
+    expect(vsHealthy).toBeGreaterThan(vsOwnBaseline)
+    expect(vsOwnBaseline).toBeLessThan(10)
+  })
+
+  it('a low Gain nudges risk up', () => {
+    expect(relativeRisk(NORMAL, BASELINE, 5).riskPct).toBeGreaterThan(
+      relativeRisk(NORMAL, BASELINE, 30).riskPct,
     )
+  })
+
+  it('metricHarm: drop counts for lower-is-worse, rise for higher-is-worse', () => {
+    expect(metricHarm('contractionFrequency', 5, 10)).toBeGreaterThan(0) // 50% drop
+    expect(metricHarm('contractionFrequency', 12, 10)).toBe(0) // above baseline is fine
+    expect(metricHarm('coordination', 4, 0.8)).toBeGreaterThan(0) // rise is bad
+    expect(metricHarm('coordination', 0.5, 0.8)).toBe(0) // below baseline is fine
   })
 
   it('band cutoffs are monotonic', () => {
@@ -75,16 +107,11 @@ describe('Motility Index + Gain', () => {
   })
 
   it('poor motility gives a low gain', () => {
-    const mi = computeMotility(v({ contractionAmplitude: 38, mmcDuration: 1.3, contractionFrequency: 4 }), MI_BASELINE_WORK)
+    const mi = computeMotility(
+      v({ contractionAmplitude: 38, mmcDuration: 1.3, contractionFrequency: 4 }),
+      MI_BASELINE_WORK,
+    )
     expect(mi.gain).toBeLessThan(20)
-  })
-
-  it('gain affects the risk score (low gain adds penalty)', () => {
-    expect(gainPenalty(30)).toBe(0)
-    expect(gainPenalty(5)).toBeGreaterThan(0)
-    const withGood = scoreRisk([], 30).riskPct
-    const withPoor = scoreRisk([], 4).riskPct
-    expect(withPoor).toBeGreaterThan(withGood)
   })
 })
 

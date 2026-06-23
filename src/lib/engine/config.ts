@@ -341,6 +341,12 @@ export const ABNORMALITY_DEFS: Record<string, AbnormalityDef> = {
  *  clock-driven and therefore excluded). */
 export type Profile = Record<Exclude<MetricKey, 'timeSinceMMC'>, number>
 
+/**
+ * Per-band target values. The Normal profile doubles as each baby's calibrated
+ * BASELINE reference, so the bands are expressed as how far a baby has drifted
+ * from its own baseline: Watch ≈ a mild deviation, Alert ≈ a large one (the
+ * clinical "~30–50% drop from baseline" zone).
+ */
 export const PROFILES: Record<StatusBand, Profile> = {
   Normal: {
     contractionFrequency: 10,
@@ -350,20 +356,50 @@ export const PROFILES: Record<StatusBand, Profile> = {
     coordination: 0.8,
   },
   Watch: {
-    contractionFrequency: 7,
-    contractionAmplitude: 56,
-    mmcActivity: 0.4, // ~ every 2.5 h
-    mmcDuration: 2.6,
-    coordination: 2.0,
+    contractionFrequency: 8.3, // ~17% below baseline
+    contractionAmplitude: 68,
+    mmcActivity: 0.6,
+    mmcDuration: 4.5,
+    coordination: 1.8,
   },
   Alert: {
-    contractionFrequency: 4,
-    contractionAmplitude: 38,
-    mmcActivity: 0.12, // ~ every 8 h
-    mmcDuration: 1.3,
-    coordination: 4.5,
+    contractionFrequency: 4.5, // ~55% below baseline
+    contractionAmplitude: 40,
+    mmcActivity: 0.15,
+    mmcDuration: 1.6,
+    coordination: 4.0,
   },
 }
+
+// ---- Relative (baseline-trajectory) risk ----------------------------------
+
+/** Per-metric importance when scoring deviation from baseline. */
+export const RISK_WEIGHTS: Record<MetricKey, number> = {
+  contractionFrequency: 1.0,
+  contractionAmplitude: 0.7,
+  mmcActivity: 0.6,
+  mmcDuration: 0.8,
+  timeSinceMMC: 0.7,
+  coordination: 1.0,
+}
+
+/** Relative drop (fraction of baseline) that counts as "fully harmful" for the
+ *  lower-is-better motility metrics — matches the ~50% drop concern. */
+export const RISK_FULL_DROP = 0.5
+
+/** For higher-is-worse metrics (baseline near zero), the rise above baseline,
+ *  in metric units, that counts as fully harmful. */
+export const RISK_RISE_SPAN: Partial<Record<MetricKey, number>> = {
+  coordination: 3.5,
+  timeSinceMMC: 5,
+}
+
+/** How much a low Motility-Index Gain adds on top (kept small — the motility
+ *  drop already captures most of it). */
+export const RISK_GAIN_WEIGHT = 0.4
+
+/** Squash constant for relative harm → 0–100 risk. */
+export const RELATIVE_RISK_K = 2.2
 
 /** Per-baby baseline jitter (±) — each baby calibrates its own baseline. */
 export const BASELINE_JITTER = 0.08
