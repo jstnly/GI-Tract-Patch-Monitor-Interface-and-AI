@@ -47,7 +47,7 @@ import { computeDistensionRisk } from './derived'
 import { recommendFeeding } from './feeding'
 import { computeMotility } from './motility'
 import { gaussian, intRange, mulberry32, range } from './rng'
-import { scoreRisk } from './risk'
+import { relativeRisk } from './risk'
 
 interface MetricState {
   value: number
@@ -426,7 +426,8 @@ export class Simulation {
     const active = detectAbnormalities(values, m)
     const activeIds = new Set(active.map((a) => a.def.id))
     const motility = computeMotility(values, sm.baselineWork)
-    const { riskPct, band } = scoreRisk(active, motility.gain)
+    // Risk is judged against THIS baby's own baseline, not absolute thresholds.
+    const { riskPct, band } = relativeRisk(values, sm.baseline, motility.gain)
 
     if (advanced) pushHistory(sm.riskHistory, { t: now, v: riskPct })
 
