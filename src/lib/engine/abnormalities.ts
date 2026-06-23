@@ -32,21 +32,17 @@ export function detectAbnormalities(v: MetricValues, m: number): ActiveAbnormali
   // Contraction strength
   if (v.contractionAmplitude < 50 * m) add('CA_LOW', v.contractionAmplitude, 50 * m)
 
-  // Rhythm regularity
-  if (v.motilityRhythmRegularity < 50) add('MR_VLOW', v.motilityRhythmRegularity, 50)
-  else if (v.motilityRhythmRegularity < 70) add('MR_LOW', v.motilityRhythmRegularity, 70)
+  // MMC duration (organized wave length)
+  if (v.mmcDuration < 1.5) add('MMC_VSHORT', v.mmcDuration, 1.5)
+  else if (v.mmcDuration < 3) add('MMC_SHORT', v.mmcDuration, 3)
 
-  // Bowel-movement activity
-  if (v.stoolActivity < 0.1 && v.timeSinceLastStoolHr > 12) add('STOOL_LOW', v.stoolActivity, 0.1)
-  else if (v.stoolActivity > 2.5) add('STOOL_HIGH', v.stoolActivity, 2.5)
+  // Time since last MMC (should occur every 1–2 h)
+  if (v.timeSinceMMC > 6) add('MMC_VLATE', v.timeSinceMMC, 6)
+  else if (v.timeSinceMMC > 3) add('MMC_LATE', v.timeSinceMMC, 3)
 
-  // Time since last stool
-  if (v.timeSinceLastStoolHr > 48) add('NO_STOOL_48', v.timeSinceLastStoolHr, 48)
-  else if (v.timeSinceLastStoolHr > 24) add('NO_STOOL_24', v.timeSinceLastStoolHr, 24)
-
-  // Abdominal distension
-  if (v.abdominalDistension > 50) add('DIST_SEV', v.abdominalDistension, 50)
-  else if (v.abdominalDistension > 25) add('DIST_MOD', v.abdominalDistension, 25)
+  // Coordination number (0 = sequential … 5 = random)
+  if (v.coordination > 4) add('COORD_SEV', v.coordination, 4)
+  else if (v.coordination > 2.5) add('COORD_MOD', v.coordination, 2.5)
 
   // Keep only the single highest-severity abnormality per metric.
   const bestByMetric = new Map<MetricKey, ActiveAbnormality>()

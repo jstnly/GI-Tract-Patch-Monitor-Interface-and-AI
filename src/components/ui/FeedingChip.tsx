@@ -29,7 +29,7 @@ function iconFor(action: FeedingAction, size: number) {
   }
 }
 
-/** Compact feeding-advice pill: "Feed now", "Hold feeds", "Consult", etc. */
+/** Compact feeding-suggestion pill, e.g. "Consider feeding", "Consider holding". */
 export function FeedingChip({ feeding, size = 'md', showTime = false }: Props) {
   const iconSize = size === 'sm' ? 13 : 15
   const time =
@@ -39,7 +39,7 @@ export function FeedingChip({ feeding, size = 'md', showTime = false }: Props) {
   return (
     <span className={`${styles.chip} ${TONE[feeding.action]} ${styles[size]}`}>
       {iconFor(feeding.action, iconSize)}
-      <span>
+      <span className={styles.text}>
         {feeding.label}
         {time}
       </span>

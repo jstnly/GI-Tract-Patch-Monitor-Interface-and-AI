@@ -23,20 +23,23 @@ export interface MetricSample {
   v: number
 }
 
-/** The live metrics every patch reports. */
+/** The live metrics derived from the patch's three sensors. */
 export type MetricKey =
   | 'contractionFrequency'
   | 'contractionAmplitude'
-  | 'motilityRhythmRegularity'
-  | 'stoolActivity'
-  | 'timeSinceLastStoolHr'
-  | 'abdominalDistension'
+  | 'mmcActivity'
+  | 'mmcDuration'
+  | 'timeSinceMMC'
+  | 'coordination'
+
+/** Which physical sensor(s) a metric is derived from. */
+export type SensorLabel = 'Movement' | 'Sound' | 'Bioimpedance' | 'Movement + Sound'
 
 export interface Metric {
   key: MetricKey
   /** Full label for the detail view, e.g. "Contraction frequency". */
   label: string
-  /** Compact label for cards, e.g. "Motility". */
+  /** Compact label for cards, e.g. "Contractions". */
   shortLabel: string
   value: number
   unit: string
@@ -44,10 +47,52 @@ export interface Metric {
   decimals: number
   /** Healthy range for this baby (already adjusted for maturity). */
   normalRange: [number, number]
+  /** This baby's own calibrated baseline for the metric. */
+  baseline: number
+  /** Sensor(s) this metric comes from. */
+  sensor: SensorLabel
   trend: 'up' | 'down' | 'flat'
   /** True when the current value sits outside `normalRange`. */
   outOfRange: boolean
+  /** Whether a trend graph/sparkline is shown (coordination has none). */
+  chartable: boolean
   history: MetricSample[]
+}
+
+/** Combined motility-index box: post-fed response vs. resting baseline. */
+export interface MotilityIndex {
+  /** Motility Index = ln(Σ(amplitude × duration) + 1). */
+  index: number
+  /** Resting baseline index (average of the first 48 h). */
+  baseline: number
+  /** Post-fed ÷ baseline motility "work". Normal 20–40. */
+  gain: number
+  /** Healthy gain range. */
+  normalGain: [number, number]
+}
+
+export type SignalStatus = 'good' | 'placement' | 'motion'
+
+/** Multi-sensor agreement confidence (rises when the three sensors agree). */
+export type Confidence = 'high' | 'medium' | 'low'
+
+/**
+ * AI assessment of the three sensors' signal quality. This is data-quality /
+ * artifact analysis ONLY (patch placement, motion) — never a clinical
+ * diagnosis. It tells the nurse when the readings may be unreliable.
+ */
+export interface SignalQuality {
+  status: SignalStatus
+  /** Short label, e.g. "Signal clear", "Check patch placement". */
+  label: string
+  /** Plain-language explanation for the nurse. */
+  detail: string
+  /** Which sensor looks off, if any. */
+  sensor?: string
+  /** Multi-sensor agreement confidence. */
+  confidence: Confidence
+  /** How many of the 3 sensors currently agree. */
+  sensorsAgreeing: number
 }
 
 export interface Abnormality {
@@ -123,6 +168,14 @@ export interface Monitor {
   riskPct: number
   metrics: Metric[]
   abnormalities: Abnormality[]
+  /** Combined Motility Index / Gain box. */
+  motility: MotilityIndex
+  /** Derived distension risk % (a conclusion, not a measured value). */
+  distensionRisk: number
+  /** True while the device is still establishing this baby's baseline (~48 h). */
+  calibrating: boolean
+  /** AI signal-quality assessment of the patch sensors. */
+  signal: SignalQuality
   feeding: FeedingRecommendation
   /** Signed clinical notes for this baby's record, oldest first. */
   notes: NurseNote[]

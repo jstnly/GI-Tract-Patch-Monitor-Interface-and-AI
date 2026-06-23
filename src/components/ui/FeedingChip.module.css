@@ -6,6 +6,14 @@
   font-weight: var(--fw-semibold);
   line-height: 1;
   white-space: nowrap;
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* Truncate gracefully if a suggestion label is long for a narrow card. */
+.text {
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .md {
