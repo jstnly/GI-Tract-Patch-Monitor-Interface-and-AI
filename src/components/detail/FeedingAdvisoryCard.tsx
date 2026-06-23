@@ -23,18 +23,21 @@ function icon(action: FeedingAction) {
   }
 }
 
-/** Action-first feeding recommendation — the decision a nurse came to make. */
+/** A feeding SUGGESTION (decision support) — the care team makes the call. */
 export function FeedingAdvisoryCard({ feeding }: { feeding: FeedingRecommendation }) {
   return (
-    <section className={`${styles.card} ${TONE[feeding.action]}`} aria-label="Feeding recommendation">
+    <section className={`${styles.card} ${TONE[feeding.action]}`} aria-label="Feeding suggestion">
       <span className={styles.iconWrap}>{icon(feeding.action)}</span>
       <div className={styles.body}>
-        <span className={styles.eyebrow}>Feeding advisory</span>
+        <span className={styles.eyebrow}>Feeding suggestion</span>
         <span className={styles.verb}>{feeding.label}</span>
         <span className={styles.rationale}>{feeding.rationale}</span>
         {feeding.action === 'feed_soon' && feeding.targetTime && (
-          <span className={styles.meta}>Next feed ≈ {formatClock(feeding.targetTime)}</span>
+          <span className={styles.meta}>Likely feed window ≈ {formatClock(feeding.targetTime)}</span>
         )}
+        <span className={styles.disclaimer}>
+          Decision support only — the care team decides.
+        </span>
       </div>
     </section>
   )

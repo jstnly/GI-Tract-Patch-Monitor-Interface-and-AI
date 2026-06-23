@@ -7,12 +7,15 @@ import { RiskMeter } from '../ui/RiskMeter'
 import { StatusBadge } from '../ui/StatusBadge'
 import { IconPencil } from '../ui/icons'
 import { DemoControls } from './DemoControls'
+import { DistensionRiskCard } from './DistensionRiskCard'
 import { EditContextForm } from './EditContextForm'
 import { FeedingAdvisoryCard } from './FeedingAdvisoryCard'
 import { MetricGrid } from './MetricGrid'
+import { MotilityIndexCard } from './MotilityIndexCard'
 import { NurseNotesCard } from './NurseNotesCard'
 import { RemoveMonitorButton } from './RemoveMonitorButton'
 import { RenameMonitorForm } from './RenameMonitorForm'
+import { SignalQualityCard } from './SignalQualityCard'
 import { TrendChartPanel } from './TrendChartPanel'
 import styles from './MonitorDetail.module.css'
 
@@ -108,8 +111,17 @@ function MonitorWindow({ monitor, index }: { monitor: Monitor; index: number }) 
         </section>
       )}
 
+      {monitor.calibrating && (
+        <div className={styles.calibratingBanner}>
+          Establishing this baby's baseline (first ~48 h). Live readings show now; baseline
+          comparisons appear once calibration completes.
+        </div>
+      )}
+      <SignalQualityCard signal={monitor.signal} />
       <FeedingAdvisoryCard feeding={monitor.feeding} />
-      <MetricGrid metrics={monitor.metrics} />
+      <MotilityIndexCard motility={monitor.motility} />
+      <DistensionRiskCard value={monitor.distensionRisk} />
+      <MetricGrid metrics={monitor.metrics} calibrating={monitor.calibrating} />
       <TrendChartPanel monitor={monitor} />
       <NurseNotesCard monitorId={monitor.id} notes={monitor.notes} />
 

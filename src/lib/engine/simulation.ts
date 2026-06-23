@@ -19,10 +19,13 @@ import type {
   NewMonitorSeed,
   NewNote,
   NurseNote,
+  SignalStatus,
   StatusBand,
 } from '../../types/monitor'
 import { detectAbnormalities, type MetricValues } from './abnormalities'
 import {
+  BASELINE_JITTER,
+  CALIBRATION_TICKS,
   clamp,
   FEED_MINUTES_PER_TICK,
   HISTORY_LEN,
@@ -30,11 +33,19 @@ import {
   maturityFactor,
   METRIC_DEFS,
   METRIC_ORDER,
+  MI_BASELINE_WORK,
+  MMC_GAP_START,
   PROFILES,
   SEVERITY_WEIGHT,
+  SIGNAL_CONFIDENCE,
+  SIGNAL_INFO,
+  SIGNAL_MOTION_ONSET,
+  SIGNAL_MOTION_RECOVER,
   TREND_LOOKBACK,
 } from './config'
+import { computeDistensionRisk } from './derived'
 import { recommendFeeding } from './feeding'
+import { computeMotility } from './motility'
 import { gaussian, intRange, mulberry32, range } from './rng'
 import { scoreRisk } from './risk'
 
@@ -63,15 +74,17 @@ interface SimMonitor {
   revision: number
   rng: () => number
   notes: NurseNote[]
+  /** Resting motility "work" baseline for the Gain calculation. */
+  baselineWork: number
+  /** This baby's own calibrated baseline per metric. */
+  baseline: Record<MetricKey, number>
+  /** Ticks remaining while the device establishes the baseline (0 = calibrated). */
+  calibrationTicksLeft: number
+  /** AI signal-quality state. */
+  signalMode: SignalStatus
 }
 
-const NON_TIME_KEYS = METRIC_ORDER.filter((k) => k !== 'timeSinceLastStoolHr')
-
-const STOOL_START: Record<StatusBand, [number, number]> = {
-  Normal: [0, 6],
-  Watch: [8, 20],
-  Alert: [22, 42],
-}
+const NON_TIME_KEYS = METRIC_ORDER.filter((k) => k !== 'timeSinceMMC')
 
 function pushHistory(buf: MetricSample[], sample: MetricSample): void {
   buf.push(sample)
@@ -117,6 +130,10 @@ interface CreateParams {
   id?: string
   /** Pre-existing notes (restored from storage). */
   notes?: NurseNote[]
+  /** Initial AI signal-quality state (defaults to good). */
+  signal?: SignalStatus
+  /** Whether the device still needs to establish a baseline (new patch). */
+  calibrate?: boolean
 }
 
 function createSimMonitor(p: CreateParams): SimMonitor {
@@ -148,12 +165,22 @@ function createSimMonitor(p: CreateParams): SimMonitor {
       history: [{ t: p.now, v: start }],
     }
   }
-  const [slo, shi] = STOOL_START[p.initialBand]
-  const stoolStart = range(rng, slo, shi)
-  metrics.timeSinceLastStoolHr = {
-    value: stoolStart,
+  const [glo, ghi] = MMC_GAP_START[p.initialBand]
+  const mmcGap = range(rng, glo, ghi)
+  metrics.timeSinceMMC = {
+    value: mmcGap,
     target: 0,
-    history: [{ t: p.now, v: stoolStart }],
+    history: [{ t: p.now, v: mmcGap }],
+  }
+
+  // Each baby calibrates its own baseline (≈ its healthy reference + jitter).
+  const baseline = {} as Record<MetricKey, number>
+  for (const key of METRIC_ORDER) {
+    const ref =
+      key === 'timeSinceMMC'
+        ? 1.0
+        : PROFILES.Normal[key as keyof (typeof PROFILES)['Normal']]
+    baseline[key] = ref * (1 + range(rng, -BASELINE_JITTER, BASELINE_JITTER))
   }
 
   return {
@@ -172,6 +199,10 @@ function createSimMonitor(p: CreateParams): SimMonitor {
     revision: 0,
     rng,
     notes: p.notes ?? [],
+    baselineWork: MI_BASELINE_WORK * range(rng, 0.9, 1.15),
+    baseline,
+    calibrationTicksLeft: p.calibrate ? CALIBRATION_TICKS : 0,
+    signalMode: p.signal ?? 'good',
   }
 }
 
@@ -185,8 +216,8 @@ function snapToBand(sm: SimMonitor, band: StatusBand, now: number): void {
     )
     sm.metrics[key].target = profile
   }
-  const [slo, shi] = STOOL_START[band]
-  sm.metrics.timeSinceLastStoolHr.value = range(sm.rng, slo, shi)
+  const [glo, ghi] = MMC_GAP_START[band]
+  sm.metrics.timeSinceMMC.value = range(sm.rng, glo, ghi)
   void now
 }
 
@@ -207,8 +238,11 @@ function buildMetric(sm: SimMonitor, key: MetricKey): Metric {
     unit: def.unit,
     decimals: def.decimals,
     normalRange: def.normal,
+    baseline: sm.baseline[key],
+    sensor: def.sensor,
     trend: computeTrend(state.history, def.noise),
     outOfRange: state.value < def.normal[0] || state.value > def.normal[1],
+    chartable: def.chartable,
     history: state.history.slice(),
   }
 }
@@ -250,6 +284,7 @@ export class Simulation {
       initialBand: band,
       autoBand: band,
       now,
+      calibrate: true, // a freshly applied patch establishes its baseline first
     })
     this.monitors.push(sm)
     return this.build(sm, now, false)
@@ -335,6 +370,8 @@ export class Simulation {
   // --- internals ----------------------------------------------------------
 
   private advance(sm: SimMonitor, now: number): void {
+    if (sm.calibrationTicksLeft > 0) sm.calibrationTicksLeft -= 1
+
     // Feeding clock; simulate an actual feed being given after "Feed now".
     sm.minutesSinceFeed += FEED_MINUTES_PER_TICK
     if (sm.prevFeedingAction === 'feed_now' && sm.rng() < 0.25) {
@@ -348,6 +385,16 @@ export class Simulation {
     const targetRate = fast ? 0.18 : 0.012
     if (sm.driftBoost > 0) sm.driftBoost -= 1
 
+    // AI signal-quality state machine. Motion artifacts are transient; a
+    // placement issue is sticky (the patch stays misplaced until repositioned).
+    if (sm.signalMode === 'motion') {
+      if (sm.rng() < SIGNAL_MOTION_RECOVER) sm.signalMode = 'good'
+    } else if (sm.signalMode === 'good') {
+      if (sm.rng() < SIGNAL_MOTION_ONSET) sm.signalMode = 'motion'
+    }
+    // During a motion artifact the sensor traces get noticeably noisier.
+    const noiseMul = sm.signalMode === 'motion' ? 3.5 : 1
+
     // Drift each metric's target toward the active band profile, then the
     // value toward its target with bounded noise.
     for (const key of NON_TIME_KEYS) {
@@ -355,22 +402,22 @@ export class Simulation {
       const state = sm.metrics[key]
       const profile = PROFILES[activeBand][key as keyof (typeof PROFILES)['Normal']]
       state.target += targetRate * (profile - state.target)
-      state.value += def.drift * (state.target - state.value) + gaussian(sm.rng, def.noise)
+      state.value += def.drift * (state.target - state.value) + gaussian(sm.rng, def.noise * noiseMul)
       state.value = clamp(state.value, def.min, def.max)
       pushHistory(state.history, { t: now, v: state.value })
     }
 
-    // Stool clock: stochastic events reset "time since last stool"; otherwise
-    // it climbs at the compressed gut-clock rate.
-    const stoolDef = METRIC_DEFS.timeSinceLastStoolHr
-    const stool = sm.metrics.timeSinceLastStoolHr
-    const pStool = clamp(sm.metrics.stoolActivity.value * HOURS_PER_TICK, 0, 1)
-    if (sm.rng() < pStool) {
-      stool.value = range(sm.rng, 0, 0.5)
+    // MMC clock: stochastic onsets (driven by MMC activity) reset "time since
+    // last MMC"; otherwise it climbs at the compressed gut-clock rate.
+    const mmcDef = METRIC_DEFS.timeSinceMMC
+    const mmc = sm.metrics.timeSinceMMC
+    const pMMC = clamp(sm.metrics.mmcActivity.value * HOURS_PER_TICK, 0, 1)
+    if (sm.rng() < pMMC) {
+      mmc.value = range(sm.rng, 0, 0.3)
     } else {
-      stool.value = clamp(stool.value + HOURS_PER_TICK, stoolDef.min, stoolDef.max)
+      mmc.value = clamp(mmc.value + HOURS_PER_TICK, mmcDef.min, mmcDef.max)
     }
-    pushHistory(stool.history, { t: now, v: stool.value })
+    pushHistory(mmc.history, { t: now, v: mmc.value })
   }
 
   private build(sm: SimMonitor, now: number, advanced: boolean): Monitor {
@@ -378,7 +425,8 @@ export class Simulation {
     const m = maturityFactor(sm.context.correctedAgeDays)
     const active = detectAbnormalities(values, m)
     const activeIds = new Set(active.map((a) => a.def.id))
-    const { riskPct, band } = scoreRisk(active)
+    const motility = computeMotility(values, sm.baselineWork)
+    const { riskPct, band } = scoreRisk(active, motility.gain)
 
     if (advanced) pushHistory(sm.riskHistory, { t: now, v: riskPct })
 
@@ -387,11 +435,24 @@ export class Simulation {
       band,
       activeIds,
       m,
+      gain: motility.gain,
       minutesSinceFeed: sm.minutesSinceFeed,
       feedIntervalTargetMin: sm.context.feedIntervalTargetMin,
       now,
     })
     sm.prevFeedingAction = feeding.action
+
+    const info = SIGNAL_INFO[sm.signalMode]
+    const conf = SIGNAL_CONFIDENCE[sm.signalMode]
+    const signal = {
+      status: sm.signalMode,
+      label: info.label,
+      detail: info.detail,
+      sensor: info.sensor,
+      confidence: conf.confidence,
+      sensorsAgreeing: conf.sensorsAgreeing,
+    }
+    const distensionRisk = computeDistensionRisk(values)
 
     // Maintain first-seen timestamps for active abnormalities.
     for (const id of [...sm.detectedAt.keys()]) {
@@ -422,6 +483,10 @@ export class Simulation {
       riskPct,
       metrics: METRIC_ORDER.map((key) => buildMetric(sm, key)),
       abnormalities,
+      motility,
+      distensionRisk,
+      calibrating: sm.calibrationTicksLeft > 0,
+      signal,
       feeding,
       notes: sm.notes.slice(),
       riskHistory: sm.riskHistory.slice(),
@@ -445,12 +510,14 @@ export function createInitialSimulation(
     bed: string,
     initialBand: StatusBand,
     autoBand: StatusBand,
-  ) => createSimMonitor({ id, label, bed, initialBand, autoBand, now, notes: notesById[id] })
+    signal: SignalStatus = 'good',
+  ) => createSimMonitor({ id, label, bed, initialBand, autoBand, now, notes: notesById[id], signal })
 
   return new Simulation([
     make('seed-1', 'Baby A', 'Bed 1', 'Normal', 'Normal'),
     make('seed-2', 'Baby B', 'Bed 2', 'Normal', 'Normal'),
-    make('seed-3', 'Baby C', 'Bed 3', 'Normal', 'Normal'),
+    // Calm clinically, but the AI flags a patch-placement signal issue.
+    make('seed-3', 'Baby C', 'Bed 3', 'Normal', 'Normal', 'placement'),
     make('seed-4', 'Baby D', 'Bed 4', 'Watch', 'Watch'),
     make('seed-5', 'Baby E', 'Bed 5', 'Alert', 'Alert'),
     // Starts calm, naturally slides toward Alert so the red outline appears

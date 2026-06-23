@@ -13,7 +13,9 @@ type Selection = 'risk' | string
 
 export function TrendChartPanel({ monitor }: { monitor: Monitor }) {
   const [selected, setSelected] = useState<Selection>('risk')
-  const metric = monitor.metrics.find((m) => m.key === selected)
+  // Coordination (and any non-chartable metric) has no trend graph.
+  const chartable = monitor.metrics.filter((m) => m.chartable)
+  const metric = chartable.find((m) => m.key === selected)
 
   return (
     <section aria-label="Trends over time">
@@ -27,7 +29,7 @@ export function TrendChartPanel({ monitor }: { monitor: Monitor }) {
         >
           Risk
         </button>
-        {monitor.metrics.map((m) => (
+        {chartable.map((m) => (
           <button
             key={m.key}
             role="tab"

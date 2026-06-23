@@ -1,12 +1,13 @@
 /**
  * Pure feeding advisory.
  *
- * Clinical reasoning: feeding into a quiet, distended, or non-stooling gut
- * risks feed intolerance and (in preterms) NEC. Coordinated, adequately strong
- * peristalsis plus recent stooling plus a soft belly indicate the tract is
- * ready. The scheduled interval only gates Ready vs. Feed-soon once the gut
- * itself looks healthy.
+ * Reasoning: a healthy, coordinated, adequately strong motility pattern with a
+ * good post-fed Gain and regular MMC cycles indicates the gut is ready for the
+ * next feed. Weak, uncoordinated, or absent motility suggests holding and
+ * reviewing with a clinician. The scheduled interval only gates Ready vs.
+ * Feed-soon once the motility itself looks healthy.
  *
+ * Wording is general guidance (when to feed / hold / review) — not a diagnosis.
  * Rules are evaluated top-down; the first match wins.
  */
 
@@ -21,6 +22,8 @@ export interface FeedingInput {
   activeIds: Set<string>
   /** Maturity factor (0.6–1.0). */
   m: number
+  /** Motility Index Gain. */
+  gain: number
   /** Virtual minutes since the last feed. */
   minutesSinceFeed: number
   feedIntervalTargetMin: number
@@ -29,67 +32,71 @@ export interface FeedingInput {
 }
 
 export function recommendFeeding(input: FeedingInput): FeedingRecommendation {
-  const { values: v, band, activeIds, m, minutesSinceFeed, feedIntervalTargetMin, now } = input
+  const { values: v, band, activeIds, m, gain, minutesSinceFeed, feedIntervalTargetMin, now } =
+    input
 
-  // 1. Consult — highest GI risk, never feed.
-  if (band === 'Alert' || activeIds.has('DIST_SEV') || activeIds.has('NO_STOOL_48')) {
-    const rationale = activeIds.has('NO_STOOL_48')
-      ? 'No stool > 48h — hold feeds and notify clinician.'
-      : activeIds.has('DIST_SEV')
-        ? 'Severe distension — do not feed; notify clinician.'
-        : 'High GI risk — do not feed; notify clinician.'
-    return { action: 'consult', label: 'Consult clinician', rationale }
+  // 1. Review — highest risk; the suggestion is to hold and involve a clinician.
+  if (band === 'Alert' || activeIds.has('COORD_SEV') || activeIds.has('MMC_VLATE')) {
+    const rationale = activeIds.has('MMC_VLATE')
+      ? 'Motor complex appears absent — you may want to hold feeds and review with a clinician.'
+      : activeIds.has('COORD_SEV')
+        ? 'Contractions look uncoordinated — you may want to hold feeds and review with a clinician.'
+        : 'Risk level is high — you may want to hold feeds and review with a clinician.'
+    return { action: 'consult', label: 'Suggest clinician review', rationale }
   }
 
-  // 2. Hold — soft contraindications.
+  // 2. Hold — soft signals that feeding may not be well tolerated.
   if (
-    v.abdominalDistension > 25 ||
+    v.coordination > 2.5 ||
     v.contractionFrequency < 6 * m ||
-    v.motilityRhythmRegularity < 60 ||
-    (v.timeSinceLastStoolHr > 24 && v.abdominalDistension > 15)
+    v.mmcDuration < 2 ||
+    v.timeSinceMMC > 3 ||
+    gain < 12
   ) {
     const rationale =
-      v.abdominalDistension > 25
-        ? 'Abdomen distended — hold feed, recheck in 30 min.'
+      v.coordination > 2.5
+        ? 'Coordination looks reduced — feeding may be less well tolerated; consider holding.'
         : v.contractionFrequency < 6 * m
-          ? 'Gut motility low — hold feed until peristalsis returns.'
-          : v.motilityRhythmRegularity < 60
-            ? 'Motility irregular — hold and reassess.'
-            : 'No stool > 24h with fullness — hold, consider check.'
-    return { action: 'hold', label: 'Hold feeds', rationale }
+          ? 'Contractions look slow — you might hold until motility picks up.'
+          : v.mmcDuration < 2
+            ? 'Motor-complex duration looks short — you might hold and reassess.'
+            : v.timeSinceMMC > 3
+              ? 'Motor complex looks overdue — you might hold and reassess.'
+              : 'Post-fed motility gain looks low — you might hold and reassess.'
+    return { action: 'hold', label: 'Consider holding', rationale }
   }
 
-  // 3. Ready — healthy gut and the feed is due.
+  // 3. Ready — motility looks healthy and the feed is due.
   if (
     band === 'Normal' &&
     minutesSinceFeed >= feedIntervalTargetMin &&
     v.contractionFrequency >= 6 * m &&
-    v.abdominalDistension <= 15 &&
-    v.motilityRhythmRegularity >= 70
+    v.coordination <= 2 &&
+    v.mmcDuration >= 3 &&
+    gain >= 20
   ) {
     return {
       action: 'feed_now',
-      label: 'Feed now',
-      rationale: 'Gut active and belly soft — OK to feed now.',
+      label: 'Consider feeding',
+      rationale: 'Motility looks active and coordinated — this baby may be ready to feed.',
     }
   }
 
-  // 4. Feed soon — gut looks fine but the feed is not due yet (or Watch w/o hold).
+  // 4. Feed soon — motility looks fine but the feed is not due yet (or Watch).
   const minutesUntilDue = Math.max(0, feedIntervalTargetMin - minutesSinceFeed)
   const realMsUntilDue = (minutesUntilDue / FEED_MINUTES_PER_TICK) * TICK_MS
   if (minutesUntilDue <= 0) {
-    // Overdue but gut not cleared for Ready (e.g. Watch band) — reassess shortly.
     return {
       action: 'feed_soon',
-      label: 'Feed soon',
-      rationale: 'Monitoring tolerance — reassess feeding shortly.',
+      label: 'Feeding soon',
+      rationale: 'Tolerance still settling — likely ready to feed shortly.',
       targetTime: now + 5 * 60_000,
     }
   }
   return {
     action: 'feed_soon',
-    label: 'Feed soon',
-    rationale: 'On track — gut tolerating feeds.',
+    label: 'Feeding soon',
+    rationale: 'On track — likely ready to feed around the next window.',
     targetTime: now + realMsUntilDue,
   }
 }

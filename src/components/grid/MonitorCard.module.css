@@ -43,6 +43,28 @@
   gap: var(--space-2);
 }
 
+.calibratingFlag {
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  background: var(--color-accent-soft);
+  color: var(--color-accent-hover);
+  font-size: var(--fs-tiny);
+  font-weight: var(--fw-semibold);
+}
+
+/* AI signal-quality flag (patch placement / motion artifact). */
+.signalFlag {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  background: var(--color-watch-soft);
+  color: var(--color-watch);
+  font-size: var(--fs-tiny);
+  font-weight: var(--fw-semibold);
+}
+
 .ident {
   min-width: 0;
 }

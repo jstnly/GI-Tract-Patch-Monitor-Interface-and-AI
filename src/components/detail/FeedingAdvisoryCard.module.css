@@ -50,6 +50,13 @@
   font-variant-numeric: tabular-nums;
 }
 
+.disclaimer {
+  margin-top: var(--space-2);
+  font-size: var(--fs-tiny);
+  font-style: italic;
+  color: var(--color-text-faint);
+}
+
 .feed {
   background: var(--color-accent-soft);
   border-color: #c9e0fd;

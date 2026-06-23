@@ -1,3 +1,12 @@
+.calibratingBanner {
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-watch-soft);
+  border: 1px solid #f0dcb5;
+  border-radius: var(--radius-md);
+  font-size: var(--fs-label);
+  color: var(--color-watch);
+}
+
 .titleRow {
   display: flex;
   align-items: center;

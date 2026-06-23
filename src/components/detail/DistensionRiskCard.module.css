@@ -1,0 +1,83 @@
+.card {
+  padding: var(--space-4);
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.block {
+  display: flex;
+  flex-direction: column;
+}
+
+.eyebrow {
+  font-size: var(--fs-tiny);
+  font-weight: var(--fw-semibold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-faint);
+}
+
+.val {
+  font-size: 26px;
+  font-weight: var(--fw-semibold);
+  letter-spacing: -0.01em;
+}
+
+.level {
+  font-size: var(--fs-tiny);
+  font-weight: var(--fw-semibold);
+  padding: 3px 9px;
+  border-radius: var(--radius-pill);
+}
+
+.track {
+  margin-top: var(--space-3);
+  height: 7px;
+  border-radius: var(--radius-pill);
+  background: var(--color-border);
+  overflow: hidden;
+}
+
+.fill {
+  height: 100%;
+  border-radius: var(--radius-pill);
+  transition: width 0.5s ease;
+}
+
+.note {
+  margin-top: var(--space-2);
+  font-size: var(--fs-tiny);
+  color: var(--color-text-faint);
+}
+
+.low {
+  color: var(--color-normal);
+  background-color: var(--color-normal-soft);
+}
+.elevated {
+  color: var(--color-watch);
+  background-color: var(--color-watch-soft);
+}
+.high {
+  color: var(--color-alert);
+  background-color: var(--color-alert-soft);
+}
+
+/* The fill uses the band colour as its background directly. */
+.fill.low {
+  background-color: var(--color-normal);
+}
+.fill.elevated {
+  background-color: var(--color-watch-bright);
+}
+.fill.high {
+  background-color: var(--color-alert);
+}

@@ -55,10 +55,38 @@
   color: var(--color-text-faint);
 }
 
+.baseline {
+  font-size: var(--fs-tiny);
+  color: var(--color-text-muted);
+}
+
+.delta {
+  font-weight: var(--fw-semibold);
+  font-variant-numeric: tabular-nums;
+}
+
+.calibrating {
+  font-size: var(--fs-tiny);
+  font-weight: var(--fw-medium);
+  color: var(--color-watch);
+}
+
+.sensor {
+  margin-top: var(--space-1);
+  font-size: var(--fs-tiny);
+  color: var(--color-text-faint);
+}
+
 .spark {
   margin-top: var(--space-1);
   width: 100%;
   height: auto;
+}
+
+.scaleHint {
+  margin-top: var(--space-2);
+  font-size: var(--fs-tiny);
+  color: var(--color-text-faint);
 }
 
 @media (max-width: 420px) {

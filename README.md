@@ -1,15 +1,28 @@
 # GI Tract Patch Monitor — Dashboard (Prototype)
 
 A nurse-facing dashboard for **GI-tract patch monitors** used on babies in a DICU
-(digestive intensive care unit). Each patch tracks a baby's digestive movement —
-gut contractions / peristalsis — and bowel-movement activity, compares it to
-normal-baby reference ranges, and surfaces:
+(digestive intensive care unit). Each patch's three sensors track gut motility —
+contraction frequency & strength, MMC (migrating motor complex) duration and
+timing, and a bioimpedance **coordination number** — compares them to normal
+reference ranges, and surfaces:
 
-- an at-a-glance **risk level / percentage** per baby,
-- a **red outline + alert** on any monitor whose abnormalities cross a concerning
-  threshold, so a nurse knows to check on that baby,
-- a **feeding recommendation** (when to feed, hold, or consult) driven by gut
-  motility and bowel movements,
+- an at-a-glance **risk level / percentage** per baby (a risk indicator, not a
+  diagnosis),
+- a **red outline + alert** when a monitor's risk crosses a concerning threshold,
+  so a nurse knows to check on that baby,
+- **per-baby baseline calibration** — each metric shows the baby's own baseline
+  and its % change (a new patch shows "Calibrating baseline…" first),
+- a **derived distension-risk %** (a conclusion estimated from bioimpedance +
+  motility, not a direct measurement),
+- a **Motility Index** box: index, resting baseline, and post-fed **Gain**
+  (normal 20–40),
+- per-metric **sensor labels** and a **multi-sensor confidence** indicator (rises
+  when the three sensors agree),
+- an **AI signal-quality check** that flags patch-placement or motion artifacts
+  (baby crying / laughing / moving) so nurses know when readings may be
+  unreliable — data-quality analysis only, never a diagnosis,
+- a **feeding recommendation** (feed / hold / review with clinician) driven by
+  the motility metrics and Gain,
 - a one-click **detail view** with the full spectrum of metrics and trends,
 - **add / remove** monitors at any time.
 

@@ -7,7 +7,13 @@ import { FeedingChip } from '../ui/FeedingChip'
 import { RiskMeter } from '../ui/RiskMeter'
 import { Sparkline } from '../ui/Sparkline'
 import { StatusBadge } from '../ui/StatusBadge'
-import { IconChevronRight, IconTrendDown, IconTrendFlat, IconTrendUp } from '../ui/icons'
+import {
+  IconAlert,
+  IconChevronRight,
+  IconTrendDown,
+  IconTrendFlat,
+  IconTrendUp,
+} from '../ui/icons'
 import styles from './MonitorCard.module.css'
 
 interface Props {
@@ -26,12 +32,13 @@ function MonitorCardImpl({ monitor, compact = false }: Props) {
   const byKey = new Map(monitor.metrics.map((m) => [m.key, m]))
   const cardMetrics = CARD_METRIC_KEYS.map((k) => byKey.get(k)).filter((m): m is Metric => !!m)
   const bandClass = styles[bandKey(monitor.status)] ?? ''
+  const signalIssue = monitor.signal.status !== 'good'
 
   return (
     <button
       className={`${styles.card} ${bandClass} ${compact ? styles.compact : ''}`}
       onClick={() => actions.open(monitor.id)}
-      aria-label={`${monitor.label}, ${monitor.bed}, risk ${monitor.riskPct}%, status ${monitor.status}. Open details.`}
+      aria-label={`${monitor.label}, ${monitor.bed}, risk ${monitor.riskPct}%, status ${monitor.status}.${signalIssue ? ` Signal: ${monitor.signal.label}.` : ''} Open details.`}
     >
       <div className={styles.top}>
         <div className={styles.ident}>
@@ -43,6 +50,14 @@ function MonitorCardImpl({ monitor, compact = false }: Props) {
         </div>
         <StatusBadge band={monitor.status} size="sm" />
       </div>
+
+      {monitor.calibrating && <div className={styles.calibratingFlag}>Calibrating baseline…</div>}
+      {signalIssue && (
+        <div className={styles.signalFlag}>
+          <IconAlert size={12} />
+          <span>{monitor.signal.label}</span>
+        </div>
+      )}
 
       <div className={styles.mid}>
         <RiskMeter
@@ -61,7 +76,11 @@ function MonitorCardImpl({ monitor, compact = false }: Props) {
               </span>
               {!compact && (
                 <>
-                  <Sparkline data={m.history} width={44} height={16} className={styles.spark} />
+                  {m.chartable ? (
+                    <Sparkline data={m.history} width={44} height={16} className={styles.spark} />
+                  ) : (
+                    <span className={styles.spark} />
+                  )}
                   <span className={styles.trend}>{trendIcon(m.trend)}</span>
                 </>
               )}

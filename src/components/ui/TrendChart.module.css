@@ -1,3 +1,7 @@
+.wrap {
+  position: relative;
+}
+
 .chart {
   display: block;
   width: 100%;
@@ -5,6 +9,8 @@
   background: var(--color-surface-alt);
   border-radius: var(--radius-md);
   border: 1px solid var(--color-border);
+  touch-action: none; /* let press-and-drag inspect instead of scrolling */
+  cursor: crosshair;
 }
 
 .normalBand {
@@ -15,4 +21,38 @@
   font-size: 13px;
   font-family: var(--font-mono);
   fill: var(--color-text-faint);
+}
+
+.crosshair {
+  stroke: var(--color-text-faint);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+}
+
+.tooltip {
+  position: absolute;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  padding: 4px 9px;
+  border-radius: var(--radius-sm);
+  background: var(--color-text);
+  color: #fff;
+  box-shadow: var(--shadow-pop);
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.tipValue {
+  font-size: var(--fs-label);
+  font-weight: var(--fw-semibold);
+  font-variant-numeric: tabular-nums;
+}
+
+.tipTime {
+  font-size: var(--fs-tiny);
+  color: rgba(255, 255, 255, 0.7);
+  font-variant-numeric: tabular-nums;
 }
