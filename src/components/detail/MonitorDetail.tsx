@@ -7,7 +7,6 @@ import { RiskMeter } from '../ui/RiskMeter'
 import { StatusBadge } from '../ui/StatusBadge'
 import { IconPencil } from '../ui/icons'
 import { DemoControls } from './DemoControls'
-import { DistensionRiskCard } from './DistensionRiskCard'
 import { EditContextForm } from './EditContextForm'
 import { FeedingAdvisoryCard } from './FeedingAdvisoryCard'
 import { MetricGrid } from './MetricGrid'
@@ -76,7 +75,7 @@ function MonitorWindow({ monitor, index }: { monitor: Monitor; index: number }) 
         />
       ) : (
         <section className={styles.summary}>
-          <RiskMeter value={monitor.riskPct} band={monitor.status} size={112} stroke={10} showCaption />
+          <RiskMeter value={monitor.motileProbability} band={monitor.status} size={112} stroke={10} showCaption />
           <div className={styles.facts}>
             <div className={styles.factsHeader}>
               <StatusBadge band={monitor.status} />
@@ -120,7 +119,6 @@ function MonitorWindow({ monitor, index }: { monitor: Monitor; index: number }) 
       <SignalQualityCard signal={monitor.signal} />
       <FeedingAdvisoryCard feeding={monitor.feeding} />
       <MotilityIndexCard motility={monitor.motility} />
-      <DistensionRiskCard value={monitor.distensionRisk} />
       <MetricGrid metrics={monitor.metrics} calibrating={monitor.calibrating} />
       <TrendChartPanel monitor={monitor} />
       <NurseNotesCard monitorId={monitor.id} notes={monitor.notes} />

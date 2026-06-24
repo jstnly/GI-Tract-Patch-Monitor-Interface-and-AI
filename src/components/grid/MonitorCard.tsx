@@ -38,7 +38,7 @@ function MonitorCardImpl({ monitor, compact = false }: Props) {
     <button
       className={`${styles.card} ${bandClass} ${compact ? styles.compact : ''}`}
       onClick={() => actions.open(monitor.id)}
-      aria-label={`${monitor.label}, ${monitor.bed}, risk ${monitor.riskPct}%, status ${monitor.status}.${signalIssue ? ` Signal: ${monitor.signal.label}.` : ''} Open details.`}
+      aria-label={`${monitor.label}, ${monitor.bed}, motile probability ${monitor.motileProbability}%, status ${monitor.status}.${signalIssue ? ` Signal: ${monitor.signal.label}.` : ''} Open details.`}
     >
       <div className={styles.top}>
         <div className={styles.ident}>
@@ -61,7 +61,7 @@ function MonitorCardImpl({ monitor, compact = false }: Props) {
 
       <div className={styles.mid}>
         <RiskMeter
-          value={monitor.riskPct}
+          value={monitor.motileProbability}
           band={monitor.status}
           size={compact ? 52 : 78}
           stroke={compact ? 6 : 7}

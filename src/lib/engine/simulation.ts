@@ -33,7 +33,7 @@ import {
   maturityFactor,
   METRIC_DEFS,
   METRIC_ORDER,
-  MI_BASELINE_WORK,
+  GAIN_NORMAL,
   MMC_GAP_START,
   PROFILES,
   SEVERITY_WEIGHT,
@@ -43,9 +43,8 @@ import {
   SIGNAL_MOTION_RECOVER,
   TREND_LOOKBACK,
 } from './config'
-import { computeDistensionRisk } from './derived'
 import { recommendFeeding } from './feeding'
-import { computeMotility } from './motility'
+import { computeMotility, motilityWork } from './motility'
 import { gaussian, intRange, mulberry32, range } from './rng'
 import { relativeRisk } from './risk'
 
@@ -68,7 +67,7 @@ interface SimMonitor {
   forced: StatusBand | null
   /** Ticks of fast convergence remaining (after returning to auto). */
   driftBoost: number
-  riskHistory: MetricSample[]
+  motileHistory: MetricSample[]
   detectedAt: Map<string, number>
   prevFeedingAction: string
   revision: number
@@ -136,6 +135,18 @@ interface CreateParams {
   calibrate?: boolean
 }
 
+/**
+ * A band's metric level expressed as a multiple of the Normal (baseline) level.
+ * Targets are applied to each baby's OWN baseline, so a healthy baby sits at
+ * ≈ its baseline (≈ 0 deviation) and Watch/Alert are proportional departures
+ * from that baby — not absolute thresholds.
+ */
+function bandFactor(band: StatusBand, key: MetricKey): number {
+  if (key === 'timeSinceMMC') return 1
+  const k = key as keyof (typeof PROFILES)['Normal']
+  return PROFILES[band][k] / PROFILES.Normal[k]
+}
+
 function createSimMonitor(p: CreateParams): SimMonitor {
   const rng = mulberry32(nextSeed())
   const feedIntervalTargetMin = [120, 150, 180][intRange(rng, 0, 2)]
@@ -150,18 +161,29 @@ function createSimMonitor(p: CreateParams): SimMonitor {
     admittedAt: p.now - intRange(rng, 1, 20) * 3_600_000,
   }
 
+  // Each baby calibrates its own baseline (≈ its healthy reference + jitter).
+  const baseline = {} as Record<MetricKey, number>
+  for (const key of METRIC_ORDER) {
+    const ref =
+      key === 'timeSinceMMC'
+        ? 1.0
+        : PROFILES.Normal[key as keyof (typeof PROFILES)['Normal']]
+    baseline[key] = ref * (1 + range(rng, -BASELINE_JITTER, BASELINE_JITTER))
+  }
+
+  // Metrics start at the band's level RELATIVE to this baby's baseline, so a
+  // healthy baby begins at ≈ its own baseline (low risk / high motile prob).
   const metrics = {} as Record<MetricKey, MetricState>
   for (const key of NON_TIME_KEYS) {
     const def = METRIC_DEFS[key]
     const start = clamp(
-      PROFILES[p.initialBand][key as keyof (typeof PROFILES)['Normal']] +
-        gaussian(rng, def.noise * 2),
+      baseline[key] * bandFactor(p.initialBand, key) + gaussian(rng, def.noise * 2),
       def.min,
       def.max,
     )
     metrics[key] = {
       value: start,
-      target: PROFILES[p.autoBand][key as keyof (typeof PROFILES)['Normal']],
+      target: baseline[key] * bandFactor(p.autoBand, key),
       history: [{ t: p.now, v: start }],
     }
   }
@@ -171,16 +193,6 @@ function createSimMonitor(p: CreateParams): SimMonitor {
     value: mmcGap,
     target: 0,
     history: [{ t: p.now, v: mmcGap }],
-  }
-
-  // Each baby calibrates its own baseline (≈ its healthy reference + jitter).
-  const baseline = {} as Record<MetricKey, number>
-  for (const key of METRIC_ORDER) {
-    const ref =
-      key === 'timeSinceMMC'
-        ? 1.0
-        : PROFILES.Normal[key as keyof (typeof PROFILES)['Normal']]
-    baseline[key] = ref * (1 + range(rng, -BASELINE_JITTER, BASELINE_JITTER))
   }
 
   return {
@@ -193,13 +205,15 @@ function createSimMonitor(p: CreateParams): SimMonitor {
     autoBand: p.autoBand,
     forced: null,
     driftBoost: 0,
-    riskHistory: [{ t: p.now, v: 0 }],
+    motileHistory: [{ t: p.now, v: 100 }],
     detectedAt: new Map(),
     prevFeedingAction: 'feed_soon',
     revision: 0,
     rng,
     notes: p.notes ?? [],
-    baselineWork: MI_BASELINE_WORK * range(rng, 0.9, 1.15),
+    // Resting baseline MI, set so this baby at its own baseline reads the
+    // mid-normal Gain (~2.5×). Gain then tracks departures from baseline.
+    baselineWork: motilityWork(baseline as MetricValues) / ((GAIN_NORMAL[0] + GAIN_NORMAL[1]) / 2),
     baseline,
     calibrationTicksLeft: p.calibrate ? CALIBRATION_TICKS : 0,
     signalMode: p.signal ?? 'good',
@@ -208,13 +222,13 @@ function createSimMonitor(p: CreateParams): SimMonitor {
 
 function snapToBand(sm: SimMonitor, band: StatusBand, now: number): void {
   for (const key of NON_TIME_KEYS) {
-    const profile = PROFILES[band][key as keyof (typeof PROFILES)['Normal']]
+    const target = sm.baseline[key] * bandFactor(band, key)
     sm.metrics[key].value = clamp(
-      profile + gaussian(sm.rng, METRIC_DEFS[key].noise),
+      target + gaussian(sm.rng, METRIC_DEFS[key].noise),
       METRIC_DEFS[key].min,
       METRIC_DEFS[key].max,
     )
-    sm.metrics[key].target = profile
+    sm.metrics[key].target = target
   }
   const [glo, ghi] = MMC_GAP_START[band]
   sm.metrics.timeSinceMMC.value = range(sm.rng, glo, ghi)
@@ -400,8 +414,8 @@ export class Simulation {
     for (const key of NON_TIME_KEYS) {
       const def = METRIC_DEFS[key]
       const state = sm.metrics[key]
-      const profile = PROFILES[activeBand][key as keyof (typeof PROFILES)['Normal']]
-      state.target += targetRate * (profile - state.target)
+      const target = sm.baseline[key] * bandFactor(activeBand, key)
+      state.target += targetRate * (target - state.target)
       state.value += def.drift * (state.target - state.value) + gaussian(sm.rng, def.noise * noiseMul)
       state.value = clamp(state.value, def.min, def.max)
       pushHistory(state.history, { t: now, v: state.value })
@@ -426,10 +440,12 @@ export class Simulation {
     const active = detectAbnormalities(values, m)
     const activeIds = new Set(active.map((a) => a.def.id))
     const motility = computeMotility(values, sm.baselineWork)
-    // Risk is judged against THIS baby's own baseline, not absolute thresholds.
+    // Risk is judged against THIS baby's own baseline; the headline output is
+    // the inverse: a motile probability (high = healthy).
     const { riskPct, band } = relativeRisk(values, sm.baseline, motility.gain)
+    const motileProbability = 100 - riskPct
 
-    if (advanced) pushHistory(sm.riskHistory, { t: now, v: riskPct })
+    if (advanced) pushHistory(sm.motileHistory, { t: now, v: motileProbability })
 
     const feeding = recommendFeeding({
       values,
@@ -453,8 +469,6 @@ export class Simulation {
       confidence: conf.confidence,
       sensorsAgreeing: conf.sensorsAgreeing,
     }
-    const distensionRisk = computeDistensionRisk(values)
-
     // Maintain first-seen timestamps for active abnormalities.
     for (const id of [...sm.detectedAt.keys()]) {
       if (!activeIds.has(id)) sm.detectedAt.delete(id)
@@ -481,16 +495,15 @@ export class Simulation {
       label: sm.label,
       bed: sm.bed,
       status: band,
-      riskPct,
+      motileProbability,
       metrics: METRIC_ORDER.map((key) => buildMetric(sm, key)),
       abnormalities,
       motility,
-      distensionRisk,
       calibrating: sm.calibrationTicksLeft > 0,
       signal,
       feeding,
       notes: sm.notes.slice(),
-      riskHistory: sm.riskHistory.slice(),
+      motileHistory: sm.motileHistory.slice(),
       context: { ...sm.context },
       revision: sm.revision,
       lastUpdated: now,

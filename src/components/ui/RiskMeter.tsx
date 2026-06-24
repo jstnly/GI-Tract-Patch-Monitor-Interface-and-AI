@@ -12,7 +12,8 @@ interface Props {
   showCaption?: boolean
 }
 
-/** Circular risk gauge: a single arc coloured by band, percentage in the centre. */
+/** Circular gauge: a single arc coloured by band, percentage in the centre.
+ *  Used for Motile Probability (high = healthy → fuller, greener). */
 export function RiskMeter({ value, band, size = 64, stroke = 7, showCaption = false }: Props) {
   const r = (size - stroke) / 2
   const c = 2 * Math.PI * r
@@ -24,7 +25,7 @@ export function RiskMeter({ value, band, size = 64, stroke = 7, showCaption = fa
       className={`${styles.meter} ${styles[bandKey(band)]}`}
       style={{ width: size, height: size }}
       role="img"
-      aria-label={`Risk ${value}%, ${band}`}
+      aria-label={`Motile probability ${value}%, ${band}`}
     >
       <svg width={size} height={size} aria-hidden="true">
         <circle
@@ -53,7 +54,7 @@ export function RiskMeter({ value, band, size = 64, stroke = 7, showCaption = fa
           {value}
           <span className={styles.pct}>%</span>
         </span>
-        {showCaption && <span className={styles.caption}>RISK</span>}
+        {showCaption && <span className={styles.caption}>MOTILE</span>}
       </div>
     </div>
   )

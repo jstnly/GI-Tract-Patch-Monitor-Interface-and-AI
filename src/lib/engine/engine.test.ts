@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest'
 import { detectAbnormalities, type MetricValues } from './abnormalities'
-import { computeDistensionRisk } from './derived'
 import { recommendFeeding } from './feeding'
 import { bandFromRisk, metricHarm, relativeRisk } from './risk'
 import { computeMotility } from './motility'
@@ -54,7 +53,7 @@ describe('baseline-relative risk', () => {
       coordination: 1.8,
       timeSinceMMC: 1.6,
     })
-    expect(relativeRisk(watch, BASELINE, 15).band).toBe('Watch')
+    expect(relativeRisk(watch, BASELINE, 1.3).band).toBe('Watch')
   })
 
   it('a large drop from baseline crosses into Alert', () => {
@@ -66,20 +65,20 @@ describe('baseline-relative risk', () => {
       coordination: 4.0,
       timeSinceMMC: 5,
     })
-    expect(relativeRisk(alert, BASELINE, 2).band).toBe('Alert')
+    expect(relativeRisk(alert, BASELINE, 0.3).band).toBe('Alert')
   })
 
   it('is RELATIVE — the same values read as less risky against a sicker baseline', () => {
     const sick = v({ contractionFrequency: 5 })
-    const vsHealthy = relativeRisk(sick, BASELINE, 30).riskPct // big drop from 10
-    const vsOwnBaseline = relativeRisk(sick, { ...BASELINE, contractionFrequency: 5 }, 30).riskPct
+    const vsHealthy = relativeRisk(sick, BASELINE, 2.5).riskPct // big drop from 10
+    const vsOwnBaseline = relativeRisk(sick, { ...BASELINE, contractionFrequency: 5 }, 2.5).riskPct
     expect(vsHealthy).toBeGreaterThan(vsOwnBaseline)
     expect(vsOwnBaseline).toBeLessThan(10)
   })
 
   it('a low Gain nudges risk up', () => {
-    expect(relativeRisk(NORMAL, BASELINE, 5).riskPct).toBeGreaterThan(
-      relativeRisk(NORMAL, BASELINE, 30).riskPct,
+    expect(relativeRisk(NORMAL, BASELINE, 1).riskPct).toBeGreaterThan(
+      relativeRisk(NORMAL, BASELINE, 2.5).riskPct,
     )
   })
 
@@ -99,11 +98,13 @@ describe('baseline-relative risk', () => {
 })
 
 describe('Motility Index + Gain', () => {
-  it('a healthy gut lands in the normal gain band (20–40)', () => {
+  it('a healthy gut ramps activity into the normal gain band (2–3×)', () => {
     const mi = computeMotility(NORMAL, MI_BASELINE_WORK)
-    expect(mi.gain).toBeGreaterThanOrEqual(20)
-    expect(mi.gain).toBeLessThanOrEqual(40)
+    expect(mi.gain).toBeGreaterThanOrEqual(2)
+    expect(mi.gain).toBeLessThanOrEqual(3)
     expect(mi.index).toBeGreaterThan(0)
+    // Gain is literally current MI ÷ baseline MI.
+    expect(mi.gain).toBeCloseTo(mi.index / mi.baseline, 5)
   })
 
   it('poor motility gives a low gain', () => {
@@ -111,28 +112,12 @@ describe('Motility Index + Gain', () => {
       v({ contractionAmplitude: 38, mmcDuration: 1.3, contractionFrequency: 4 }),
       MI_BASELINE_WORK,
     )
-    expect(mi.gain).toBeLessThan(20)
-  })
-})
-
-describe('derived distension risk', () => {
-  it('is low for a healthy gut and high when coordination + stasis rise', () => {
-    expect(computeDistensionRisk(NORMAL)).toBeLessThan(30)
-    const high = computeDistensionRisk(
-      v({ coordination: 4.5, timeSinceMMC: 6, contractionAmplitude: 38 }),
-    )
-    expect(high).toBeGreaterThan(60)
-  })
-
-  it('returns a 0–100 percentage', () => {
-    const r = computeDistensionRisk(v({ coordination: 5, timeSinceMMC: 12, contractionAmplitude: 0 }))
-    expect(r).toBeGreaterThanOrEqual(0)
-    expect(r).toBeLessThanOrEqual(100)
+    expect(mi.gain).toBeLessThan(2)
   })
 })
 
 describe('feeding advisory', () => {
-  const base = { m, gain: 30, minutesSinceFeed: 200, feedIntervalTargetMin: 150, now: 1_000_000 }
+  const base = { m, gain: 2.5, minutesSinceFeed: 200, feedIntervalTargetMin: 150, now: 1_000_000 }
 
   it('recommends Feed now when motility is healthy and the feed is due', () => {
     const rec = recommendFeeding({ values: NORMAL, band: 'Normal', activeIds: new Set(), ...base })

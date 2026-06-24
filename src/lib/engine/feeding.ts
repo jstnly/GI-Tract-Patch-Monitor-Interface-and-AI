@@ -51,7 +51,7 @@ export function recommendFeeding(input: FeedingInput): FeedingRecommendation {
     v.contractionFrequency < 6 * m ||
     v.mmcDuration < 2 ||
     v.timeSinceMMC > 3 ||
-    gain < 12
+    gain < 1.5
   ) {
     const rationale =
       v.coordination > 2.5
@@ -73,7 +73,7 @@ export function recommendFeeding(input: FeedingInput): FeedingRecommendation {
     v.contractionFrequency >= 6 * m &&
     v.coordination <= 2 &&
     v.mmcDuration >= 3 &&
-    gain >= 20
+    gain >= 2
   ) {
     return {
       action: 'feed_now',
