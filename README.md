@@ -6,16 +6,16 @@ contraction frequency & strength, MMC (migrating motor complex) duration and
 timing, and a bioimpedance **coordination number** — compares them to normal
 reference ranges, and surfaces:
 
-- an at-a-glance **risk level / percentage** per baby (a risk indicator, not a
-  diagnosis),
-- a **red outline + alert** when a monitor's risk crosses a concerning threshold,
-  so a nurse knows to check on that baby,
+- an at-a-glance **Motile Probability** per baby — a 0–100% likelihood the gut is
+  motile (high = healthy), a score rather than a diagnosis,
+- a **red outline + alert** when a monitor's motile probability drops into a
+  concerning band, so a nurse knows to check on that baby,
 - **per-baby baseline calibration** — each metric shows the baby's own baseline
-  and its % change (a new patch shows "Calibrating baseline…" first),
-- a **derived distension-risk %** (a conclusion estimated from bioimpedance +
-  motility, not a direct measurement),
-- a **Motility Index** box: index, resting baseline, and post-fed **Gain**
-  (normal 20–40),
+  and its % change, and the motile probability is judged against that baseline
+  (a new patch shows "Calibrating baseline…" first),
+- a **Motility Gain** box: current Motility Index, resting baseline, and **Gain =
+  current MI ÷ baseline MI** — a healthy gut ramps ~**2–3×** after a stimulus
+  (feeding),
 - per-metric **sensor labels** and a **multi-sensor confidence** indicator (rises
   when the three sensors agree),
 - an **AI signal-quality check** that flags patch-placement or motion artifacts
@@ -74,8 +74,8 @@ its own after a minute or so.
 
 ## Using the demo
 
-- **Click any monitor box** to open its pop-out detail window: risk → feeding
-  advice → all metrics → trends → nurse notes. The windows are draggable and
+- **Click any monitor box** to open its pop-out detail window: motile probability
+  → feeding advice → all metrics → trends → nurse notes. The windows are draggable and
   resizable, and several can be open at once to compare babies (e.g. twins).
 - **Add monitor** (top-right) pairs a new monitor; pick a starting state
   (Normal / Watch / Alert / Random) to seed the demo.
@@ -85,9 +85,9 @@ its own after a minute or so.
 - Inside a monitor's detail drawer, the collapsible **Demo controls** can force
   that monitor to Normal / Watch / Alert, or back to **Auto** (live drift).
 
-Risk bands: **Normal** 0–39%, **Watch** 40–69% (amber ring), **Alert** 70–100%
-(**red ring + entry in the alert banner**). Status is always shown with an icon and
-a word as well as colour, so it never relies on colour alone.
+Motile-probability bands: **Normal** 61–100%, **Watch** 31–60% (amber ring),
+**Alert** 0–30% (**red ring + entry in the alert banner**). Status is always shown
+with an icon and a word as well as colour, so it never relies on colour alone.
 
 ---
 
@@ -108,9 +108,10 @@ src/
       SimulatedDataSource.ts  drives the simulation on a timer
     engine/                   pure, unit-tested clinical logic
       config.ts               every tunable constant (thresholds, bands, profiles)
-      abnormalities.ts        metric values → flagged abnormalities
-      risk.ts                 abnormalities → risk % + band
-      feeding.ts              metrics + risk → feeding recommendation
+      abnormalities.ts        metric values → flagged abnormalities (feeds feeding)
+      risk.ts                 deviation from baseline → risk % (inverted to motile prob.) + band
+      motility.ts             Motility Index + Gain (current MI ÷ baseline MI)
+      feeding.ts              metrics + gain → feeding recommendation
       simulation.ts           live, drifting, plausible data generation
   state/                      React context + reducer + tick loop
   components/                 layout · grid · alerts · detail · add · ui

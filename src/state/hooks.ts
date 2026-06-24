@@ -32,7 +32,7 @@ export function useFleetSummary(): FleetSummary {
     for (const m of monitors) byBand[m.status] += 1
     const alertIds = monitors
       .filter((m) => m.status === 'Alert')
-      .sort((a, b) => b.riskPct - a.riskPct)
+      .sort((a, b) => a.motileProbability - b.motileProbability) // least motile first
     return { total: monitors.length, byBand, alertIds }
   }, [monitors])
 }

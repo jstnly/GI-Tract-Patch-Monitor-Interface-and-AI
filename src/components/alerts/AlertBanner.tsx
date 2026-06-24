@@ -25,7 +25,7 @@ export function AlertBanner() {
           <button key={m.id} className={styles.chip} onClick={() => actions.open(m.id)}>
             <span className={styles.chipName}>{m.label}</span>
             <span className={styles.chipBed}>{m.bed}</span>
-            <span className={styles.chipPct}>{m.riskPct}%</span>
+            <span className={styles.chipPct}>{m.motileProbability}% motile</span>
           </button>
         ))}
       </div>

@@ -9,10 +9,10 @@ const BAND_COLOR: Record<StatusBand, string> = {
   Alert: 'var(--color-alert)',
 }
 
-type Selection = 'risk' | string
+type Selection = 'motile' | string
 
 export function TrendChartPanel({ monitor }: { monitor: Monitor }) {
-  const [selected, setSelected] = useState<Selection>('risk')
+  const [selected, setSelected] = useState<Selection>('motile')
   // Coordination (and any non-chartable metric) has no trend graph.
   const chartable = monitor.metrics.filter((m) => m.chartable)
   const metric = chartable.find((m) => m.key === selected)
@@ -23,11 +23,11 @@ export function TrendChartPanel({ monitor }: { monitor: Monitor }) {
       <div className={styles.chips} role="tablist" aria-label="Choose a series to plot">
         <button
           role="tab"
-          aria-selected={selected === 'risk'}
-          className={`${styles.chip} ${selected === 'risk' ? styles.active : ''}`}
-          onClick={() => setSelected('risk')}
+          aria-selected={selected === 'motile'}
+          className={`${styles.chip} ${selected === 'motile' ? styles.active : ''}`}
+          onClick={() => setSelected('motile')}
         >
-          Risk
+          Motile prob.
         </button>
         {chartable.map((m) => (
           <button
@@ -42,11 +42,11 @@ export function TrendChartPanel({ monitor }: { monitor: Monitor }) {
         ))}
       </div>
 
-      {selected === 'risk' || !metric ? (
+      {selected === 'motile' || !metric ? (
         <TrendChart
-          data={monitor.riskHistory}
+          data={monitor.motileHistory}
           domain={[0, 100]}
-          normalRange={[0, 39]}
+          normalRange={[60, 100]}
           color={BAND_COLOR[monitor.status]}
           unit="%"
           decimals={0}

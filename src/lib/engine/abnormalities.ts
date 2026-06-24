@@ -1,7 +1,7 @@
 /**
  * Pure abnormality detection: current metric values + maturity factor → the
  * list of active abnormalities (with per-metric escalation, so an escalation
- * pair like distension/severe-distension is never double-counted).
+ * pair like reduced/severe coordination is never double-counted).
  */
 
 import type { MetricKey } from '../../types/monitor'

@@ -213,12 +213,13 @@ export const CALIBRATION_TICKS = 24
 
 /**
  * Resting baseline motility "work" (≈ average of the first 48 h, fasting).
- * Gain = current work ÷ baseline; a healthy post-fed gut lands at 20–40.
+ * Gain = current (post-stimulus) MI ÷ baseline MI; a healthy gut ramps activity
+ * ~2–3× after a stimulus (feeding).
  */
-export const MI_BASELINE_WORK = 165
+export const MI_BASELINE_WORK = 1950
 
-/** Healthy Gain range. */
-export const GAIN_NORMAL: [number, number] = [20, 40]
+/** Healthy Gain range (×). */
+export const GAIN_NORMAL: [number, number] = [2, 3]
 
 // ---- AI signal-quality copy ----------------------------------------------
 

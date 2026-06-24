@@ -7,15 +7,15 @@ export function MotilityIndexCard({ motility }: { motility: MotilityIndex }) {
   const out = motility.gain < lo || motility.gain > hi
 
   return (
-    <section className={styles.card} aria-label="Motility Index">
-      <h3 className={styles.heading}>Motility Index</h3>
+    <section className={styles.card} aria-label="Motility Gain">
+      <h3 className={styles.heading}>Motility Gain</h3>
       <div className={styles.gainRow}>
         <div className={styles.gainBlock}>
           <span className={`${styles.gainVal} tnum ${out ? styles.out : ''}`}>
             {motility.gain.toFixed(1)}
             <span className={styles.times}>×</span>
           </span>
-          <span className={styles.gainLabel}>Gain · post-fed ÷ baseline</span>
+          <span className={styles.gainLabel}>Gain · post-stimulus MI ÷ baseline MI</span>
         </div>
         <span className={`${styles.normalTag} ${out ? styles.normalTagOut : ''}`}>
           Normal {lo}–{hi}×

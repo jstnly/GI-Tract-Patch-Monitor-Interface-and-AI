@@ -164,14 +164,12 @@ export interface Monitor {
   label: string
   bed: string
   status: StatusBand
-  /** 0–100, precomputed by the engine. */
-  riskPct: number
+  /** 0–100 likelihood the gut is motile (high = healthy). Inverse of risk. */
+  motileProbability: number
   metrics: Metric[]
   abnormalities: Abnormality[]
   /** Combined Motility Index / Gain box. */
   motility: MotilityIndex
-  /** Derived distension risk % (a conclusion, not a measured value). */
-  distensionRisk: number
   /** True while the device is still establishing this baby's baseline (~48 h). */
   calibrating: boolean
   /** AI signal-quality assessment of the patch sensors. */
@@ -179,8 +177,8 @@ export interface Monitor {
   feeding: FeedingRecommendation
   /** Signed clinical notes for this baby's record, oldest first. */
   notes: NurseNote[]
-  /** Rolling history of the risk score, for the card sparkline + detail chart. */
-  riskHistory: MetricSample[]
+  /** Rolling history of the motile probability, for the detail trend chart. */
+  motileHistory: MetricSample[]
   context: MonitorContext
   /** Bumped only on a meaningful change — lets cards skip re-renders. */
   revision: number
